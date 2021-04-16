@@ -114,7 +114,7 @@ def compute_regional_integral(ds, variable_id, rmasks):
     """return a DataArray of the regional integral of ds[variable_id]"""
     if variable_id == 'fgo2':
         assert (ds[variable_id].attrs['units'] == 'mol m-2 s-1')
-        convert = mols_to_Tmolmon
+        convert = (-1.0) * mols_to_Tmolmon
         units_integral = 'Tmol O$_2$ month$^{-1}$'
     else:
         raise NotImplementedError(f'add "{variable_id}" to integral definitions')
@@ -126,7 +126,7 @@ def compute_regional_integral(ds, variable_id, rmasks):
     
     for key, rmask in rmasks.items():        
         assert rmask.dims == dims_lateral, 'dimension mismatch on region mask'
-        da = ((-1.0) * ds[variable_id] * rmask).sum(dims_lateral) * convert
+        da = (ds[variable_id] * rmask).sum(dims_lateral) * convert
         da.attrs['units'] = units_integral
         da_list.append(da)
         regions.append(key)    
