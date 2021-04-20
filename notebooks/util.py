@@ -23,7 +23,7 @@ def get_gridvar(df, source_id, variable_id):
     return xr.open_dataset(df_sub.iloc[0].path)
 
 
-def open_cmip_dataset(df, source_id, variable_id, experiment_id,
+def open_cmip_dataset(df, source_id, variable_id, experiment_id, table_id,
                       time_slice=None, nmax_members=None):
     """return a dataset for a particular source_id, variable_id, experiment_id"""
 
@@ -31,9 +31,10 @@ def open_cmip_dataset(df, source_id, variable_id, experiment_id,
     print(f'{source_id}, {experiment_id}, {variable_id}')
     
     df_sub = df.loc[
-        (df.source_id==source_id) 
+        (df.source_id == source_id) 
         & (df.variable_id==variable_id) 
-        & (df.experiment_id==experiment_id) 
+        & (df.experiment_id == experiment_id) 
+        & (df.table_id == table_id)
     ]   
     if len(df_sub) == 0: 
         print('no data')
@@ -54,10 +55,17 @@ def open_cmip_dataset(df, source_id, variable_id, experiment_id,
         paths = sorted(list(
             df_sub.loc[(df.member_id == member_id)].path
         ))
-        dsi = xr.open_mfdataset(paths)
-        if time_slice is not None:
-            dsi = dsi.sel(time=time_slice)
-        ds_list.append(dsi)    
+        
+        try:
+            dsi = xr.open_mfdataset(paths)
+            if time_slice is not None:
+                dsi = dsi.sel(time=time_slice)
+            ds_list.append(dsi)    
+        except:
+            print('open_mfdataset failed.')
+            for p in paths:
+                print(p)
+            raise
 
     # concatenate along ensemble dimension
     print()
@@ -115,20 +123,27 @@ def get_rmask_dict(grid, mask_definition, plot=False):
     return rmasks
 
 
-def compute_regional_integral(ds, variable_id, rmasks):
+def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
     """return a DataArray of the regional integral of ds[variable_id]"""
     if variable_id == 'fgo2':
         assert (ds[variable_id].attrs['units'] == 'mol m-2 s-1')
         convert = (-1.0) * mols_to_Tmolmon
         units_integral = 'Tmol O$_2$ month$^{-1}$'
+        long_name = 'O$_2$ flux'
+        
     elif variable_id == 'fgco2':
         #print(ds.attrs['units'])
         #assert (ds[variable_id].attrs['units'] == 'mol m-2 s-1') ## crashing so temporarily commenting out - print says no 'units' attribute
         convert = (-1.0) * mols_to_Tmolmon
         units_integral = 'Tmol CO$_2$ month$^{-1}$'
+        long_name = 'CO$_2$ flux'
     else:
         raise NotImplementedError(f'add "{variable_id}" to integral definitions')
 
+    
+    if flipsign:
+        convert = convert * (-1.0)
+    
     da_list = []
     regions = []
     
@@ -138,6 +153,7 @@ def compute_regional_integral(ds, variable_id, rmasks):
         assert rmask.dims == dims_lateral, 'dimension mismatch on region mask'
         da = (ds[variable_id] * rmask).sum(dims_lateral) * convert
         da.attrs['units'] = units_integral
+        da.attrs['long_name'] = long_name
         da_list.append(da)
         regions.append(key)    
   
