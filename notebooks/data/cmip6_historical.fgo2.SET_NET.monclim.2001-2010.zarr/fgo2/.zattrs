@@ -1,0 +1,8 @@
+{
+    "_ARRAY_DIMENSIONS": [
+        "source_id",
+        "region",
+        "month"
+    ],
+    "units": "Tmol O$_2$ month$^{-1}$"
+}

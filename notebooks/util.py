@@ -82,10 +82,15 @@ def get_rmask_dict(grid, mask_definition, plot=False):
         raise ValueError('cannot determine lat_varname')
         
     # define region mask
-    if mask_definition == 'SH_NH':
+    if mask_definition == 'SET_NET':
         rmasks = dict(
-            NH=grid.areacello.where(grid[lat_varname] >= 20.).fillna(0.),
-            SH=grid.areacello.where(grid[lat_varname] <= -20.).fillna(0.),
+            NET=grid.areacello.where(grid[lat_varname] >= 20.).fillna(0.),
+            SET=grid.areacello.where(grid[lat_varname] <= -20.).fillna(0.),
+        )
+    elif mask_definition == 'SH_NH':
+        rmasks = dict(
+            NH=grid.areacello.where(grid[lat_varname] >= 0.).fillna(0.),
+            SH=grid.areacello.where(grid[lat_varname] < 0.).fillna(0.),
         ) 
     else:
         raise ValueError('unknown mask definition')
@@ -116,6 +121,11 @@ def compute_regional_integral(ds, variable_id, rmasks):
         assert (ds[variable_id].attrs['units'] == 'mol m-2 s-1')
         convert = (-1.0) * mols_to_Tmolmon
         units_integral = 'Tmol O$_2$ month$^{-1}$'
+    elif variable_id == 'fgco2':
+        #print(ds.attrs['units'])
+        #assert (ds[variable_id].attrs['units'] == 'mol m-2 s-1') ## crashing so temporarily commenting out - print says no 'units' attribute
+        convert = (-1.0) * mols_to_Tmolmon
+        units_integral = 'Tmol CO$_2$ month$^{-1}$'
     else:
         raise NotImplementedError(f'add "{variable_id}" to integral definitions')
 
