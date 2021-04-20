@@ -15,7 +15,9 @@ mols_to_Tmolmon = 1e-12 * 86400. * 365. / 12.
 def get_gridvar(df, source_id, variable_id):
     """get a grid variable from a source_id"""
     df_sub = df.loc[
-        (df.source_id==source_id) & (df.variable_id==variable_id)
+        (df.source_id==source_id) 
+        & (df.variable_id==variable_id)
+        & (df.grid_label == 'gn')
     ]   
     if len(df_sub) == 0:
         print(f'{source_id}: missing "{variable_id}"')
@@ -35,6 +37,7 @@ def open_cmip_dataset(df, source_id, variable_id, experiment_id, table_id,
         & (df.variable_id==variable_id) 
         & (df.experiment_id == experiment_id) 
         & (df.table_id == table_id)
+        & (df.grid_label == 'gn') # read native grid
     ]   
     if len(df_sub) == 0: 
         print('no data')
@@ -60,7 +63,7 @@ def open_cmip_dataset(df, source_id, variable_id, experiment_id, table_id,
             dsi = xr.open_mfdataset(paths)
             if time_slice is not None:
                 dsi = dsi.sel(time=time_slice)
-            ds_list.append(dsi)    
+            ds_list.append(dsi[[variable_id]])    
         except:
             print('open_mfdataset failed.')
             for p in paths:
@@ -73,7 +76,6 @@ def open_cmip_dataset(df, source_id, variable_id, experiment_id, table_id,
         ds_list, 
         dim=xr.DataArray(member_ids, dims=('member_id'), name='member_id')
     )
-    
 
 def get_rmask_dict(grid, mask_definition, plot=False):
     """return a dictionary of masked area DataArray's"""
