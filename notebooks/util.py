@@ -3,14 +3,20 @@ import os
 import numpy as np
 import xarray as xr
 
+import intake
+
 import matplotlib.pyplot as plt
 
 # make variable so as to enable system dependence
-catalog_json = '/glade/collections/cmip/catalog/intake-esm-datastore/catalogs/glade-cmip6.csv.gz'
+catalog_csv = '/glade/collections/cmip/catalog/intake-esm-datastore/catalogs/glade-cmip6.csv.gz'
+catalog_json = '/glade/collections/cmip/catalog/intake-esm-datastore/catalogs/glade-cmip6.json'
+
+cmip6_catalog = intake.open_esm_datastore(catalog_json)
 
 # constants
+T0_Kelvin = 273.15
 mols_to_Tmolmon = 1e-12 * 86400. * 365. / 12.
-kgCO2_to_Tmolmon = 1e3 / 12. * mols_to_Tmolmon
+µmolkg_to_mmolm3 = 1026. / 1000. # for volume conserving models, makes sense to use constant density
 
 
 def get_gridvar(df, source_id, variable_id):
@@ -26,59 +32,43 @@ def get_gridvar(df, source_id, variable_id):
     return xr.open_dataset(df_sub.iloc[0].path)
 
 
-def open_cmip_dataset(df, source_id, variable_id, experiment_id, table_id,
+def open_cmip_dataset(source_id, variable_id, experiment_id, table_id,
                       time_slice=None, nmax_members=None):
     """return a dataset for a particular source_id, variable_id, experiment_id"""
 
     print('='*50) 
     print(f'{source_id}, {experiment_id}, {variable_id}')
     
-    df_sub = df.loc[
-        (df.source_id == source_id) 
-        & (df.variable_id==variable_id) 
-        & (df.experiment_id == experiment_id) 
-        & (df.table_id == table_id)
-        & (df.grid_label == 'gn') # read native grid
-    ]   
-    if len(df_sub) == 0: 
+    cat_sub = cmip6_catalog.search(
+        source_id=source_id, 
+        variable_id=variable_id, 
+        experiment_id=experiment_id, 
+        table_id=table_id,
+        grid_label='gn',
+    )
+    df_sub = cat_sub.df    
+    
+    dsets_dict = cat_sub.to_dataset_dict()    
+    if len(dsets_dict) == 0: 
         print('no data')
         return
-
-    member_ids = sorted(df_sub.member_id.unique().tolist())
-    ## want to give priority to *i1p1f1 and to 1-10 (otherwise sorting selects r10, p2, and f2 earlier)
+    
+    assert len(dsets_dict) == 1, 'expecting single dataset'    
+    key, ds = dsets_dict.popitem()
         
+    member_ids = sorted(df_sub.member_id.unique().tolist())
     print(f'\tfound {len(member_ids)} ensemble members')
     
     # optionally truncate ensemble list 
     if nmax_members is not None:
         if len(member_ids) > nmax_members:
-            member_ids = member_ids[:nmax_members]
-    
-    print(f'\treading {len(member_ids)} members: {member_ids}')
-    # loop over ensembles and read the datafiles
-    ds_list = []
-    for member_id in member_ids:
-        paths = sorted(list(
-            df_sub.loc[(df.member_id == member_id)].path
-        ))
+            ds = ds.sel(member_id=member_ids[:nmax_members])
         
-        try:
-            dsi = xr.open_mfdataset(paths)
-            if time_slice is not None:
-                dsi = dsi.sel(time=time_slice)
-            ds_list.append(dsi[[variable_id]])    
-        except:
-            print('open_mfdataset failed.')
-            for p in paths:
-                print(p)
-            raise
+    if time_slice is not None:
+        ds = ds.sel(time=time_slice)
+        
+    return ds
 
-    # concatenate along ensemble dimension
-    print()
-    return xr.concat(
-        ds_list, 
-        dim=xr.DataArray(member_ids, dims=('member_id'), name='member_id')
-    )
 
 def get_rmask_dict(grid, mask_definition, plot=False):
     """return a dictionary of masked area DataArray's"""
@@ -105,6 +95,11 @@ def get_rmask_dict(grid, mask_definition, plot=False):
             NH=grid.areacello.where(grid[lat_varname] >= 0.).fillna(0.),
             SH=grid.areacello.where(grid[lat_varname] < 0.).fillna(0.),
         ) 
+    elif mask_definition == 'global':
+        rmasks = dict(
+            NH=grid.areacello.fillna(0.),
+            SH=grid.areacello.fillna(0.),
+        )     
     else:
         raise ValueError('unknown mask definition')
         
@@ -137,8 +132,9 @@ def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
         long_name = 'O$_2$ flux'
         
     elif variable_id == 'fgco2':
-        assert (ds[variable_id].attrs['units'] == 'kg m-2 s-1')
-        convert = (-1.0) * kgCO2_to_Tmolmon
+        #print(ds.attrs['units'])
+        #assert (ds[variable_id].attrs['units'] == 'mol m-2 s-1') ## crashing so temporarily commenting out - print says no 'units' attribute
+        convert = (-1.0) * mols_to_Tmolmon
         units_integral = 'Tmol CO$_2$ month$^{-1}$'
         long_name = 'CO$_2$ flux'
     else:
@@ -167,3 +163,56 @@ def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
     )
     var.name = variable_id
     return var
+
+
+def compute_fgn2(ds):
+    """compute N2 from heat flux""" 
+    raise NotImplementedError('fgn2 not implemented')
+    return ds
+    
+    
+def compute_fgo2_thermal(ds):
+    """compute thermal O2 flux"""   
+    raise NotImplementedError('fgo2_thermal not implemented')    
+    return ds
+
+
+def O2sol(S, T):
+    """
+    Solubility of O2 in sea water
+    INPUT:
+    S = salinity    [PSS]
+    T = temperature [degree C]
+
+    conc = solubility of O2 [µmol/kg]
+
+    REFERENCE:
+    Hernan E. Garcia and Louis I. Gordon, 1992.
+    "Oxygen solubility in seawater: Better fitting equations"
+    Limnology and Oceanography, 37, pp. 1307-1312.
+    """
+
+    # constants from Table 4 of Hamme and Emerson 2004
+    return _garcia_gordon_polynomial(S, T,
+                                     A0=5.80871,
+                                     A1=3.20291,
+                                     A2=4.17887,
+                                     A3=5.10006,
+                                     A4=-9.86643e-2,
+                                     A5=3.80369,
+                                     B0=-7.01577e-3,
+                                     B1=-7.70028e-3,
+                                     B2=-1.13864e-2,
+                                     B3=-9.51519e-3,
+                                     C0=-2.75915e-7)
+
+
+def _garcia_gordon_polynomial(S, T,
+                              A0=0., A1 = 0., A2 = 0., A3=0., A4=0., A5=0.,
+                              B0=0., B1=0., B2=0., B3=0.,
+                              C0=0.):
+
+    T_scaled = np.log((298.15 - T) /(T0_Kelvin + T))
+    return np.exp(A0 + A1*T_scaled + A2*T_scaled**2. + A3*T_scaled**3. + A4*T_scaled**4. + A5*T_scaled**5. + \
+                  S*(B0 + B1*T_scaled + B2*T_scaled**2. + B3*T_scaled**3.) + C0 * S**2.)
+
