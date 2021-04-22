@@ -10,6 +10,7 @@ catalog_json = '/glade/collections/cmip/catalog/intake-esm-datastore/catalogs/gl
 
 # constants
 mols_to_Tmolmon = 1e-12 * 86400. * 365. / 12.
+kgCO2_to_Tmolmon = 1e3 / 12. * mols_to_Tmolmon
 
 
 def get_gridvar(df, source_id, variable_id):
@@ -44,6 +45,8 @@ def open_cmip_dataset(df, source_id, variable_id, experiment_id, table_id,
         return
 
     member_ids = sorted(df_sub.member_id.unique().tolist())
+    ## want to give priority to *i1p1f1 and to 1-10 (otherwise sorting selects r10, p2, and f2 earlier)
+        
     print(f'\tfound {len(member_ids)} ensemble members')
     
     # optionally truncate ensemble list 
@@ -134,9 +137,8 @@ def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
         long_name = 'O$_2$ flux'
         
     elif variable_id == 'fgco2':
-        #print(ds.attrs['units'])
-        #assert (ds[variable_id].attrs['units'] == 'mol m-2 s-1') ## crashing so temporarily commenting out - print says no 'units' attribute
-        convert = (-1.0) * mols_to_Tmolmon
+        assert (ds[variable_id].attrs['units'] == 'kg m-2 s-1')
+        convert = (-1.0) * kgCO2_to_Tmolmon
         units_integral = 'Tmol CO$_2$ month$^{-1}$'
         long_name = 'CO$_2$ flux'
     else:
