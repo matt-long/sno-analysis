@@ -60,9 +60,26 @@ def open_cmip_dataset(source_id, variable_id, experiment_id, table_id,
     print(f'\tfound {len(member_ids)} ensemble members')
     
     # optionally truncate ensemble list 
-    if nmax_members is not None:
+    if nmax_members is not None:                     
         if len(member_ids) > nmax_members:
-            ds = ds.sel(member_id=member_ids[:nmax_members])
+            
+            # sort ensemble members to prioritize physics and forcing 1, and to sort realizations numerically 
+            real = np.array(member_ids)
+            init = np.array(member_ids)
+            phys = np.array(member_ids)
+            forc = np.array(member_ids)
+            for i in range(len(member_ids)):
+                real[i]=member_ids[i].split('r')[1].split('i')[0]
+                init[i]=member_ids[i].split('i')[1].split('p')[0]
+                phys[i]=member_ids[i].split('p')[1].split('f')[0]
+                forc[i]=member_ids[i].split('f')[1]
+            real=real.astype(int)
+            init=init.astype(int)
+            phys=phys.astype(int)
+            forc=forc.astype(int)      
+            member_ids_sorted=np.array(member_ids)[np.lexsort((real,init,phys,forc))]
+            
+            ds = ds.sel(member_id=member_ids_sorted[:nmax_members])
         
     if time_slice is not None:
         ds = ds.sel(time=time_slice)
@@ -132,11 +149,18 @@ def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
         long_name = 'O$_2$ flux'
         
     elif variable_id == 'fgco2':
-        #print(ds.attrs['units'])
-        #assert (ds[variable_id].attrs['units'] == 'mol m-2 s-1') ## crashing so temporarily commenting out - print says no 'units' attribute
+        assert (ds[variable_id].attrs['units'] == 'mol m-2 s-1')
         convert = (-1.0) * mols_to_Tmolmon
         units_integral = 'Tmol CO$_2$ month$^{-1}$'
         long_name = 'CO$_2$ flux'
+        
+    elif variable_id == 'intpp':
+        print(ds[variable_id].attrs['units'])
+        assert (ds[variable_id].attrs['units'] == 'mol m-2 s-1')
+        convert = 1.0 * mols_to_Tmolmon
+        units_integral = 'Tmol C month$^{-1}$' # or say "CO2"?
+        long_name = 'NPP'
+        
     else:
         raise NotImplementedError(f'add "{variable_id}" to integral definitions')
 
@@ -216,3 +240,31 @@ def _garcia_gordon_polynomial(S, T,
     return np.exp(A0 + A1*T_scaled + A2*T_scaled**2. + A3*T_scaled**3. + A4*T_scaled**4. + A5*T_scaled**5. + \
                   S*(B0 + B1*T_scaled + B2*T_scaled**2. + B3*T_scaled**3.) + C0 * S**2.)
 
+
+def N2sol(S,T):
+    '''
+    Solubility of N2 in sea water
+    INPUT:  
+    S = salinity    [PSS]
+    T = temperature [degree C]
+    
+    conc = solubility of N2 [mmol/m^3/atm]
+    
+    REFERENCE:
+    Weiss, 1970.
+    "The solubility of nitrogen, oxygen and argon in water and seawater"
+    Deep-sea Research, 17, pp. 721-735.
+    '''
+    A1 = -59.6274
+    A2 = 85.7661
+    A3 = 24.3696
+    B1 = -0.051580
+    B2 = 0.026329
+    B3 = -0.0037252
+
+    #N2_sol_an = np.log(A1 + A2*(100.0/T) + S*(B1 + B2*(T/100.0) + B3*((T/100.0)**2)))
+    #units_ml_kg__umol_kg = 1.0/0.022391
+    #N2_sol = N2_sol_an*units_ml_kg__umol_kg
+    #return _umolkg_to_mmolm3(N2_sol)
+
+    return np.log(A1 + A2*(100.0/T) + S*(B1 + B2*(T/100.0) + B3*((T/100.0)**2)))
