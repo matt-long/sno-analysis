@@ -17,7 +17,7 @@ cmip6_catalog = intake.open_esm_datastore(catalog_json)
 T0_Kelvin = 273.15
 mols_to_Tmolmon = 1e-12 * 86400. * 365. / 12.
 µmolkg_to_mmolm3 = 1026. / 1000. # for volume conserving models, makes sense to use constant density
-
+kgCO2_to_Tmolmon = 1000. / 12. * mols_to_Tmolmon
 
 def get_gridvar(df, source_id, variable_id):
     """get a grid variable from a source_id"""
@@ -149,10 +149,28 @@ def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
         long_name = 'O$_2$ flux'
         
     elif variable_id == 'fgco2':
-        assert (ds[variable_id].attrs['units'] == 'mol m-2 s-1')
-        convert = (-1.0) * mols_to_Tmolmon
+        assert (ds[variable_id].attrs['units'] == 'kg m-2 s-1')
+        convert = (-1.0) * kgCO2_to_Tmolmon
         units_integral = 'Tmol CO$_2$ month$^{-1}$'
         long_name = 'CO$_2$ flux'
+        
+    elif variable_id == 'hfds':
+        assert (ds[variable_id].attrs['units'] == 'W m-2')
+        convert = 1.0
+        units_integral = 'W m$^{-2}$'
+        long_name = 'Heat flux'
+
+    elif variable_id == 'tos':
+        assert (ds[variable_id].attrs['units'] == 'degC')
+        convert = 1.0
+        units_integral = '$^\circ$C'
+        long_name = 'Surface temperature'
+
+    elif variable_id == 'sos':
+        assert (ds[variable_id].attrs['units'] == '0.001')
+        convert = 1.0
+        units_integral = 'PSU'
+        long_name = 'Surface salinity'
         
     elif variable_id == 'intpp':
         print(ds[variable_id].attrs['units'])
