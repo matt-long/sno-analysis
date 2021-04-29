@@ -18,6 +18,7 @@ T0_Kelvin = 273.15
 mols_to_Tmolmon = 1e-12 * 86400. * 365. / 12.
 µmolkg_to_mmolm3 = 1026. / 1000. # for volume conserving models, makes sense to use constant density
 kgCO2s_to_Tmolmon = 1000. / 12. * mols_to_Tmolmon
+W_to_PW = 1. / 1E15
 
 def get_gridvar(df, source_id, variable_id):
     """get a grid variable from a source_id"""
@@ -158,8 +159,8 @@ def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
         
     elif variable_id == 'hfds':
         assert (ds[variable_id].attrs['units'] == 'W m-2')
-        convert = 1.0
-        units_integral = 'W' # convert to 'J/month'?
+        convert = 1.0 * W_to_PW
+        units_integral = 'PW' # convert to 'PJ/month'?
         long_name = 'Heat flux'
         sumormean = 'sum'
 
@@ -241,8 +242,7 @@ def O2sol(S, T):
     "Oxygen solubility in seawater: Better fitting equations"
     Limnology and Oceanography, 37, pp. 1307-1312.
     """
-
-    # constants from Table 4 of Hamme and Emerson 2004
+ 
     return _garcia_gordon_polynomial(S, T,
                                      A0=5.80871,
                                      A1=3.20291,
@@ -267,7 +267,7 @@ def _garcia_gordon_polynomial(S, T,
                   S*(B0 + B1*T_scaled + B2*T_scaled**2. + B3*T_scaled**3.) + C0 * S**2.)
 
 
-def N2sol(S,T):
+def N2solWeiss(S,T):
     '''
     Solubility of N2 in sea water
     INPUT:  
@@ -281,16 +281,71 @@ def N2sol(S,T):
     "The solubility of nitrogen, oxygen and argon in water and seawater"
     Deep-sea Research, 17, pp. 721-735.
     '''
-    A1 = -59.6274
-    A2 = 85.7661
-    A3 = 24.3696
-    B1 = -0.051580
-    B2 = 0.026329
-    B3 = -0.0037252
+    
+    # T is absolute T
+    Tabs = 275.15 + T
+    
+    rho_ref = 1.026 # g/cm3 (approx. at 15 C)
+
+    # these were coeffs or Bunsen solubility coeff:
+    #A1 = -59.6274
+    #A2 = 85.7661
+    #A3 = 24.3696
+    #B1 = -0.051580
+    #B2 = 0.026329
+    #B3 = -0.0037252
 
     #N2_sol_an = np.log(A1 + A2*(100.0/T) + S*(B1 + B2*(T/100.0) + B3*((T/100.0)**2)))
     #units_ml_kg__umol_kg = 1.0/0.022391
     #N2_sol = N2_sol_an*units_ml_kg__umol_kg
     #return _umolkg_to_mmolm3(N2_sol)
 
-    return np.log(A1 + A2*(100.0/T) + S*(B1 + B2*(T/100.0) + B3*((T/100.0)**2)))
+    # this looks like the equation for Bunsen solubility coeff, but should be np.exp not np.log, also missing A3 term and unit conversion:
+    #return np.log(A1 + A2*(100.0/T) + S*(B1 + B2*(T/100.0) + B3*((T/100.0)**2)))
+    
+    # these are coeffs and equation for ml/kg
+    A1 = -177.0212
+    A2 = 254.6078
+    A3 = 146.3611 
+    A4 = -22.0933
+    B1 = -0.054052 
+    B2 = 0.027266
+    B3 = -0.0038430
+    
+    ml_per_kg_to_mmol_per_m3 = 1 / 22.4 * rho_ref * 1e3 
+
+    return np.exp(A1 + A2*(100.0/Tabs) + A3*np.log(Tabs/100) + A4*(Tabs/100) + S*(B1 + B2*(Tabs/100.0) + B3*(Tabs/100.0)**2)) * ml_per_kg_to_mmol_per_m3
+
+
+def N2solHamme(S,T):
+    
+    '''
+    # constants from Table 4 of Hamme and Emerson 2004
+    Coef. Ne (nmol/kg) N2 (umol/kg) Ar (umol/kg)
+    A0 2.18156 6.42931 2.79150
+    A1 1.29108 2.92704 3.17609
+    A2 2.12504 4.32531 4.13116
+    A3 0 4.69149 4.90379
+    B0 -5.94737E-3 -7.44129E-3 -6.96233E-3
+    B1 -5.13896E-3 -8.02566E-3 -7.66670E-3
+    B2 0 -1.46775E-2 -1.16888E-2
+    Check: 7.34121 500.885 13.4622
+    check values at temperature of 10 C and salinity of 35 (PSS)
+    '''
+    
+    rho_ref = 1.026 # g/cm3 (approx. at 15 C)
+
+    A0 = 6.42931
+    A1 = 2.92704
+    A2 = 4.32531
+    A3 = 4.69149
+    B0 = -7.44129E-3
+    B1 = -8.02566E-3
+    B2 = -1.46775E-2
+    
+    #ln C = A0 + A1*Ts + A2*Ts^2 + A3*Ts^3 + S (B0 + B1 * Ts + B2 * Ts^2)
+    #Ts = ln((298.15 - t)/(273.15 + t)
+    
+    T_scaled = np.log((298.15 - T) /(273.15 + T))
+    return np.exp(A0 + A1*T_scaled + A2*T_scaled**2. + A3*T_scaled**3. + \
+                  S*(B0 + B1*T_scaled + B2*T_scaled**2.)) * rho_ref # convert to mmol/m^3/atm
