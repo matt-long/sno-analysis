@@ -186,6 +186,18 @@ def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
         long_name = 'NPP'
         sumormean = 'sum'
         
+    elif variable_id == 'fgn2':
+        convert = 1.0 * mols_to_Tmolmon
+        units_integral = 'Tmol N$_2$ month$^{-1}$'
+        long_name = 'N$_2$ flux'
+        sumormean = 'sum'
+        
+    elif variable_id == 'fgo2_thermal':
+        convert = 1.0 * mols_to_Tmolmon
+        units_integral = 'Tmol O$_2$ month$^{-1}$'
+        long_name = 'Thermal O$_2$ flux'
+        sumormean = 'sum'
+        
     else:
         raise NotImplementedError(f'add "{variable_id}" to integral definitions')
 
@@ -217,18 +229,81 @@ def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
 
 
 def compute_fgn2(ds):
-    """compute N2 from heat flux""" 
-    raise NotImplementedError('fgn2 not implemented')
-    return ds
+    """
+    compute N2 flux from heat flux and temperature derivative of solubility
     
+    using Eq. 2 from Keeling and Shertz, 1992 (and Eq. 19 from Keeling et al., GBC, 1993)
+    
+    F = -dC/dT * Q/Cp
+    
+    hfds is in units of W/m^2
+    Cp is in units of J/kg/K
+    dcdt is in units of umol/kg/K
+    """ 
+    
+    Cp = 3990.
+    dcdt = _N2sol(ds['sos'],ds['tos']+0.5) - _N2sol(ds['sos'],ds['tos']-0.5)
+    
+    ds['fgn2'] = -1. * dcdt * ds['hfds'] / Cp * 1e-6 # umol/kg/K * W/m^2 / (J/kg/K) ==> mol m-2 s-1 (same as fgo2)
+    
+    return ds
+        
+# old Fortran:
+#c       compute solubility and temperature derivative of solubility:
+#c
+#        call solub(sst(i,j,l),salt(i,j,l),c,dcdt)
+#c
+#c       compute gas flux:
+#c
+#        gasf(i,j,l)=-(dcdt/3990.)*heat(i,j,l)*2.628e6/22400.*.028
+#c      
+#c     3990. is the average heat capacity of seawater in joule/kg/K, see Neumann and Pearson page 47.  This number doesn't vary by more
+#c     than about 0.5% with temperature and salinity. dcdt/3990 is then the gas flux / heat flux ratio in ml STP/joule 
+#c     2.628e6 converts the flux to per month, 22400. converts the flux from ml to moles, and .028 converts from moles to kgN2.  The
+#c     resulting flux is therefore in units of kgN2/gridcell/month, positive upwards. 
+    
+#      subroutine solub(t,sal,cc,dc)
+#c     takes input t (temperature in celsius) and sal (salinity in per mil) and generates output cc (solubility in ml/kg) and dc (temperature derivative of solubility in ml/kg/K).
+#      real a(4),b(3),tt,sal,cc,dc,lnc,lnc1,lnc2
+
+#c     The following data for nitrogen in units of ml STP/kg
+#      data a/-177.0212, 254.6078, 146.3611, -22.0933/
+#      data b/-0.054052, 0.027266, -0.0038430/
+
+#      tt = t+273.15
+#      lnc = a(1)+a(2)*(100./tt)+a(3)*log(tt/100.)+a(4)*(tt/100.)+sal*(b(1) + b(2)*(tt/100.)+b(3)*(tt*tt/10000.))
+#      tt = tt+0.5
+#      lnc1 = a(1)+a(2)*(100./tt)+a(3)*log(tt/100.)+a(4)*(tt/100.)+sal*(b(1) + b(2)*(tt/100.)+b(3)*(tt*tt/10000.))
+#      tt = tt-1.0
+#      lnc2 = a(1)+a(2)*(100./tt)+a(3)*log(tt/100.)+a(4)*(tt/100.)+sal*(b(1) + b(2)*(tt/100.)+b(3)*(tt*tt/10000.))
+#      cc = exp(lnc)
+#      dc = exp(lnc1)-exp(lnc2)
+#      return
+#      end
+     
     
 def compute_fgo2_thermal(ds):
-    """compute thermal O2 flux"""   
-    raise NotImplementedError('fgo2_thermal not implemented')    
+    """
+    compute thermal O2 flux from heat flux and temperature derivative of solubility
+    
+    using Eq. 2 from Keeling and Shertz, 1992 (and Eq. 19 from Keeling et al., GBC, 1993)
+    
+    F = -dC/dT * Q/Cp
+    
+    hfds is in units of W/m^2
+    Cp is in units of J/kg/K
+    dcdt is in units of umol/kg/K
+    """ 
+    
+    Cp = 3990.
+    dcdt = _O2sol(ds['sos'],ds['tos']+0.5) - _O2sol(ds['sos'],ds['tos']-0.5)
+    
+    ds['fgo2_thermal'] = -1. * dcdt * ds['hfds'] / Cp * 1e-6 # umol/kg/K * W/m^2 / (J/kg/K) ==> mol m-2 s-1 (same as fgo2)
+    
     return ds
 
 
-def O2sol(S, T):
+def _O2sol(S, T):
     """
     Solubility of O2 in sea water
     INPUT:
@@ -274,12 +349,12 @@ def N2solWeiss(S,T):
     S = salinity    [PSS]
     T = temperature [degree C]
     
-    conc = solubility of N2 [mmol/m^3/atm]
-    
     REFERENCE:
     Weiss, 1970.
     "The solubility of nitrogen, oxygen and argon in water and seawater"
     Deep-sea Research, 17, pp. 721-735.
+    
+    returns umol/kg
     '''
     
     # T is absolute T
@@ -313,8 +388,9 @@ def N2solWeiss(S,T):
     B3 = -0.0038430
     
     ml_per_kg_to_mmol_per_m3 = 1 / 22.4 * rho_ref * 1e3 
+    ml_to_umol = 1 / 22.4 * 1e3
 
-    return np.exp(A1 + A2*(100.0/Tabs) + A3*np.log(Tabs/100) + A4*(Tabs/100) + S*(B1 + B2*(Tabs/100.0) + B3*(Tabs/100.0)**2)) * ml_per_kg_to_mmol_per_m3
+    return np.exp(A1 + A2*(100.0/Tabs) + A3*np.log(Tabs/100) + A4*(Tabs/100) + S*(B1 + B2*(Tabs/100.0) + B3*(Tabs/100.0)**2)) * ml_to_umol ## * ml_per_kg_to_mmol_per_m3
 
 
 def N2solHamme(S,T):
@@ -331,9 +407,11 @@ def N2solHamme(S,T):
     B2 0 -1.46775E-2 -1.16888E-2
     Check: 7.34121 500.885 13.4622
     check values at temperature of 10 C and salinity of 35 (PSS)
+    
+    returns umol/kg
     '''
     
-    rho_ref = 1.026 # g/cm3 (approx. at 15 C)
+    #rho_ref = 1.026 # g/cm3 (approx. at 15 C)
 
     A0 = 6.42931
     A1 = 2.92704
@@ -348,4 +426,32 @@ def N2solHamme(S,T):
     
     T_scaled = np.log((298.15 - T) /(273.15 + T))
     return np.exp(A0 + A1*T_scaled + A2*T_scaled**2. + A3*T_scaled**3. + \
-                  S*(B0 + B1*T_scaled + B2*T_scaled**2.)) * rho_ref # convert to mmol/m^3/atm
+                  S*(B0 + B1*T_scaled + B2*T_scaled**2.)) ## * rho_ref # convert to mmol/m^3/atm
+
+
+def _N2sol(S, T):
+    '''
+    Solubility (saturation) of nitrogen (N2) in sea water
+    at 1-atm pressure of air including saturated water vapor
+   
+    INPUT:  (if S and T are not singular they must have same dimensions)
+    S = salinity    [PSS]
+    T = temperature [degree C]
+   
+    OUTPUT:
+    conc = solubility of N2  [µmol/kg]
+   
+    REFERENCE:
+    Roberta Hamme and Steve Emerson, 2004.
+    "The solubility of neon, nitrogen and argon in distilled water and seawater."
+    Deep-Sea Research I, 51(11), p. 1517-1528.
+    '''
+   
+    return _garcia_gordon_polynomial(S, T,
+                                     A0=6.42931,
+                                     A1=2.92704,
+                                     A2=4.32531,
+                                     A3=4.69149,
+                                     B0=-7.44129e-3,
+                                     B1=-8.02566e-3,
+                                     B2=-1.46775e-2)
