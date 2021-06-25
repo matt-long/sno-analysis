@@ -1,0 +1,11 @@
+source_id,experiment_id,table_id,variable_id,grid_label
+ACCESS-ESM1-5,historical,Omon,sos,gn
+ACCESS-ESM1-5,historical,Omon,hfds,gn
+MPI-ESM-1-2-HAM,historical,Omon,sos,gn
+MPI-ESM-1-2-HAM,historical,Omon,hfds,gn
+MPI-ESM1-2-LR,historical,Omon,sos,gn
+MPI-ESM1-2-LR,historical,Omon,hfds,gn
+MIROC-ES2L,historical,Omon,hfds,gn
+MRI-ESM2-0,historical,Omon,intpp,gn
+MRI-ESM2-0,historical,Omon,sos,gn
+MRI-ESM2-0,historical,Omon,hfds,gn
