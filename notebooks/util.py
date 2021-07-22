@@ -1,7 +1,10 @@
 import os
-
 import numpy as np
+
+from toolz import curry
+
 import xarray as xr
+import pandas as pd
 
 import intake
 
@@ -13,6 +16,9 @@ catalog_json = '/glade/collections/cmip/catalog/intake-esm-datastore/catalogs/gl
 
 cmip6_catalog = intake.open_esm_datastore(catalog_json)
 
+# hardwired to only use native grid
+grid_label = 'gn'
+
 # constants
 T0_Kelvin = 273.15
 mols_to_Tmolmon = 1e-12 * 86400. * 365. / 12.
@@ -20,12 +26,55 @@ mols_to_Tmolmon = 1e-12 * 86400. * 365. / 12.
 kgCO2s_to_Tmolmon = 1000. / 12. * mols_to_Tmolmon
 W_to_PW = 1. / 1E15
 
+
+class missing_data_tracker(object):        
+    def __init__(self): 
+        """construct object for tracking missing data"""
+        self._columns = ['source_id', 'experiment_id', 'table_id', 'variable_id',  'grid_label']
+        
+        self.missing_data_file = 'data/missing-data.csv'            
+        if os.path.exists(self.missing_data_file):
+            self._df = pd.read_csv(self.missing_data_file)
+        else:
+            self._init_df()
+    
+    @curry
+    def ismissing(self, source_id, experiment_id, table_id, variable_id):
+        """determine whether a particular query is missing"""
+        return (source_id, experiment_id, table_id, variable_id, grid_label) in self._df.set_index(self._columns).index
+        
+    def set_missing(self, source_id, experiment_id, table_id, variable_id):
+        """set a particular query to missing"""
+        if self.ismissing(source_id, experiment_id, table_id, variable_id):
+            print('already missing')
+            return
+
+        df_new = pd.DataFrame(
+            dict(source_id=[source_id], 
+                 experiment_id=[experiment_id], 
+                 table_id=[table_id], 
+                 variable_id=[variable_id], 
+                 grid_label=[grid_label]))
+        self._df = pd.concat((self._df, df_new), ignore_index=True) #.reset_index()
+    
+    def persist(self):
+        """persist missing data dataframe"""
+        self._df.to_csv(self.missing_data_file, index=False)
+    
+    def _init_df(self):
+        self._df = pd.DataFrame({k: [] for k in self._columns})         
+        
+    def clobber(self):
+        self._init_df()
+        os.remove(self.missing_data_file)
+    
+    
 def get_gridvar(df, source_id, variable_id):
     """get a grid variable from a source_id"""
     df_sub = df.loc[
         (df.source_id==source_id) 
         & (df.variable_id==variable_id)
-        & (df.grid_label == 'gn')
+        & (df.grid_label == grid_label)
     ]   
     if len(df_sub) == 0:
         print(f'{source_id}: missing "{variable_id}"')
@@ -45,7 +94,7 @@ def open_cmip_dataset(source_id, variable_id, experiment_id, table_id,
         variable_id=variable_id, 
         experiment_id=experiment_id, 
         table_id=table_id,
-        grid_label='gn',
+        grid_label=grid_label,
     )
     df_sub = cat_sub.df    
     

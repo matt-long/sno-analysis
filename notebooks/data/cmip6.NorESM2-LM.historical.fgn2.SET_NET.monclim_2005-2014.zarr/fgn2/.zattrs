@@ -1,0 +1,8 @@
+{
+    "_ARRAY_DIMENSIONS": [
+        "region",
+        "month"
+    ],
+    "long_name": "N$_2$ flux",
+    "units": "Tmol N$_2$ month$^{-1}$"
+}
