@@ -9,9 +9,9 @@ from netCDF4 import default_fillvals
 import numpy as np
 import xarray as xr
 
-path_to_here = os.path.dirname(os.path.realpath(__file__))
+from . import grid_data
 
-Re = 6.37122e6 # m, radius of Earth
+path_to_here = os.path.dirname(os.path.realpath(__file__))
 
 # Data files available here: http://bluemoon.ucsd.edu/publications/ralph/airseaflux/Data_files
 files = {
@@ -27,74 +27,8 @@ droot = f"{path_to_here}/garcia_keeling_airseaflux"
 
 dpm  = np.array([31., 28., 31., 30., 31., 30., 31., 31., 30., 31., 30., 31.])
 eom = np.cumsum(dpm)
-bom = np.concatenate((np.array([1]), eom[0:11] + 1))
-
-
-def generate_latlon_grid(nx, ny, lon0=0., include_vertices=False):
-    """
-    Generate a regular lat,lon grid file.
-
-    Parameters
-    ----------
-    nx: number of x points.
-    ny: number of y points.
-
-    Returns
-    -------
-
-    ds: dataset with grid variables
-    """
-
-    deg2rad = np.pi / 180.
-
-    dx = 360. / nx
-    dy = 180. / ny
-
-    lat = np.arange(-90.+dy/2.,90.,dy)
-    lon = np.arange(lon0+dx/2.,lon0+360.,dx)
-
-    yc = np.broadcast_to(lat[:,None],(ny,nx))
-    xc = np.broadcast_to(lon[None,:],(ny,nx))
-
-    yv = np.stack((yc-dy/2.,yc-dy/2.,yc+dy/2.,yc+dy/2.),axis=2)
-    xv = np.stack((xc-dx/2.,xc+dx/2.,xc+dx/2.,xc-dx/2.),axis=2)
-
-    y0 = np.sin(yv[:,:,0]*deg2rad) # south
-    y1 = np.sin(yv[:,:,3]*deg2rad) # north
-    x0 = xv[:,:,0]*deg2rad         # west
-    x1 = xv[:,:,1]*deg2rad         # east
-    area = (y1 - y0) * (x1 - x0) * Re ** 2.
-
-    ds = xr.Dataset(
-        {"lat": xr.DataArray(lat,dims=("lat"),
-                            attrs={"units":"degrees_north",
-                                   "long_name":"Latitude"}),
-         "lon": xr.DataArray(lon,dims=("lon"),
-                            attrs={"units":"degrees_east",
-                            "long_name":"Longitude"})})
-    
-    if include_vertices:
-        ds["xc"] = xr.DataArray(xc,dims=("lat","lon"),
-                                attrs={"units":"degrees_east",
-                                       "long_name":"longitude of cell centers"})
-
-        ds["yc"] = xr.DataArray(yc,dims=("lat","lon"),
-                                attrs={"units":"degrees_north",
-                                       "long_name":"latitude of cell centers"})
-
-        ds["xv"] = xr.DataArray(xv,dims=("lat","lon","nv"),
-                                attrs={"units":"degrees_east",
-                                       "long_name":"longitude of cell corners"})
-
-        ds["yv"] = xr.DataArray(yv,dims=("lat","lon","nv"),
-                                attrs={"units":"degrees_north",
-                                       "long_name":"latitude of cell corners"})
-
-    ds["area"] = xr.DataArray(area,dims=("lat","lon"),
-                              attrs={"units":"m^2",
-                                     "long_name":"area"})
-
-    return ds
+bom = np.concatenate((np.array([0.]), eom[0:11]))
+np.testing.assert_array_equal(eom - bom, dpm)
 
 
 def dat2nc(dat_file_name, varname, long_name, shift_time=None, scaleby=None):
@@ -102,7 +36,7 @@ def dat2nc(dat_file_name, varname, long_name, shift_time=None, scaleby=None):
        Optionally apply temporal shift and flux scaling.
     """
     nt, ny, nx = 12, 160, 320
-    dss = generate_latlon_grid(nx=nx, ny=ny, lon0=-180.)
+    dss = grid_data.generate_latlon_grid(nx=nx, ny=ny, lon0=-180.)
        
     time = np.vstack((bom, eom)).mean(axis=0)
     date = np.round(2000 * 10000 + np.arange(1,13,1) * 100. + dpm/2.)
@@ -130,10 +64,10 @@ def dat2nc(dat_file_name, varname, long_name, shift_time=None, scaleby=None):
         attrs={
             "long_name": long_name, 
             "units": "mol/m^2/yr",
-            "_FillValue": default_fillvals["f8"],
-            "note": f"shift_time = {shift_time} days; scaleby = {scaleby}",
+            "note": f"GK2001 adjustments applied: time shifted = +{shift_time} days; scaleby = {scaleby}",
         }
     )
+    dss[varname].encoding["_FillValue"] = default_fillvals["f8"]
     
     return dss
 

@@ -1,0 +1,1 @@
+flux-product-dir: "/glade/work/{{env['USER']}}/sno-analysis/flux-products"

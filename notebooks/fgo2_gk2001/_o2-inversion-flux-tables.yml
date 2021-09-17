@@ -1,4 +1,4 @@
-### Inversion-region O2 fluxes Tg/y
+### Inversion-region O2 fluxes Tmol/y
 # Table 3/Fig. 6 of Gruber et al. 2001
 gruber:
   fluxes:
@@ -15,8 +15,9 @@ gruber:
     "12": 27.5
     "13": 52.5
     "15": -136.8
-  reference_short:
-    Gruber et al. (2001)
+  reference_short: "Gruber et al. (2001)"
+  reference: "Gruber, N., Gloor, M., Fan, S.-M., and Sarmiento, J. L. (2001), Air-sea flux of oxygen estimated from bulk data: Implications For the marine and atmospheric oxygen cycles, Global Biogeochem. Cycles, 15( 4), 783– 803, doi:10.1029/2000GB001302."
+      
 # Table 8 of Resplandy et al. (2016): 
 # Regional air–sea O2 fluxes obtained with the 7 ocean interior 
 # inversions (in Tmol/yr)
@@ -44,5 +45,4 @@ resplandy:
     "21-23-24": 40.48
     "26-27": 34.17
     "28-29": 18.09 
-  reference_short:
-    Resplandy et al. (2016)
+  reference_short: "Resplandy et al. (2016)"
