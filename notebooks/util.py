@@ -32,7 +32,7 @@ class missing_data_tracker(object):
         """construct object for tracking missing data"""
         self._columns = ['source_id', 'experiment_id', 'table_id', 'variable_id',  'grid_label']
         
-        self.missing_data_file = 'data/missing-data.csv'            
+        self.missing_data_file = 'data/cache/cmip/missing-data.csv'            
         if os.path.exists(self.missing_data_file):
             self._df = pd.read_csv(self.missing_data_file)
         else:
