@@ -26,6 +26,8 @@ mols_to_Tmolmon = 1e-12 * 86400. * 365. / 12.
 kgCO2s_to_Tmolmon = 1000. / 12. * mols_to_Tmolmon
 W_to_PW = 1. / 1E15
 Re = 6.37122e6 # m, radius of Earth
+xo2 = 0.2094 
+xn2 = 0.7808
 
 class missing_data_tracker(object):        
     def __init__(self): 
@@ -252,6 +254,24 @@ def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
         long_name = 'Thermal O$_2$ flux'
         sumormean = 'sum'
         
+    elif variable_id == 'fbddtdic':
+        convert = 1.0 * mols_to_Tmolmon
+        units_integral = 'Tmol C month$^{-1}$' # or say "CO2"?
+        long_name = 'Bio DIC change' # Rate of Change of Dissolved Inorganic Carbon Due to Biological Activity
+        sumormean = 'sum'
+        
+    elif variable_id == 'epc100':
+        convert = 1.0 * mols_to_Tmolmon
+        units_integral = 'Tmol C month$^{-1}$' # or say "CO2"?
+        long_name = 'POC export' # Downward Flux of Particulate Organic Carbon
+        sumormean = 'sum'
+        
+    elif variable_id == 'fgapo':
+        convert = (-1.0) * mols_to_Tmolmon
+        units_integral = 'Tmol APO month$^{-1}$'
+        long_name = 'APO flux'
+        sumormean = 'sum'
+        
     else:
         raise NotImplementedError(f'add "{variable_id}" to integral definitions')
 
@@ -356,6 +376,19 @@ def compute_fgo2_thermal(ds):
     
     return ds
 
+def compute_fgapo(ds):
+    """
+    compute APO flux from O2, CO2, and N2 flux
+    
+    using 
+    
+    Fapo = Fo2 + 1.1 * Fco2 - Xo2/Xn2 * Fn2 
+    """ 
+    dsi = compute_fgn2(ds)
+    
+    ds['fgapo'] = ds['fgo2'] + 1.1 * ds['fgco2'] - xo2/xn2 * dsi['fgn2'] # mol m-2 s-1 (same as fgo2)
+    
+    return ds
 
 def _O2sol(S, T):
     """

@@ -1,0 +1,8 @@
+{
+    "_ARRAY_DIMENSIONS": [
+        "region",
+        "month"
+    ],
+    "long_name": "Surface salinity",
+    "units": "PSU"
+}
