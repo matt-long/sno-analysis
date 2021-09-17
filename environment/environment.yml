@@ -20,6 +20,7 @@ dependencies:
     - holoviews
     - intake
     - intake-esm
+    - intake-xarray
     - ipykernel
     - jupyter-server-proxy
     - jupyter_contrib_nbextensions

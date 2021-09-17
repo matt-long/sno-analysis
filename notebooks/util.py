@@ -575,3 +575,57 @@ def generate_latlon_grid(nx, ny, lon0=0.):
                                      "long_name":"area"})
 
     return ds
+
+
+def infer_lat_name(ds):
+    lat_names = ['latitude', 'lat']
+    for n in lat_names:
+        if n in ds:
+            return n
+    raise ValueError('could not determine lat name')    
+
+
+def infer_lon_name(ds):
+    lon_names = ['longitude', 'lon']
+    for n in lon_names:
+        if n in ds:
+            return n
+    raise ValueError('could not determine lon name')    
+    
+
+
+def lat_weights_regular_grid(lat):
+    """
+    Generate latitude weights for equally spaced (regular) global grids.
+    Weights are computed as sin(lat+dlat/2)-sin(lat-dlat/2) and sum to 2.0.
+    """   
+    dlat = np.abs(np.diff(lat))
+    np.testing.assert_almost_equal(dlat, dlat[0])
+    w = np.abs(np.sin(np.radians(lat + dlat[0] / 2.)) - np.sin(np.radians(lat - dlat[0] / 2.)))
+
+    if np.abs(lat[0]) > 89.9999: 
+        w[0] = np.abs(1. - np.sin(np.pi / 2. - np.radians(dlat[0] / 2.)))
+
+    if np.abs(lat[-1]) > 89.9999:
+        w[-1] = np.abs(1. - np.sin(np.pi / 2. - np.radians(dlat[0] / 2.)))
+
+    return w
+
+
+def compute_grid_area(ds, check_total=True):
+    """Compute the area of grid cells."""
+    
+    radius_earth = 6.37122e6 # m, radius of Earth
+    area_earth = 4.0 * np.pi * radius_earth**2 # area of earth [m^2]e
+    
+    lon_name = infer_lon_name(ds)       
+    lat_name = infer_lat_name(ds)        
+    
+    weights = lat_weights_regular_grid(ds[lat_name])
+    area = weights + 0.0 * ds[lon_name] # add 'lon' dimension
+    area = (area_earth / area.sum(dim=(lat_name, lon_name))) * area
+    
+    if check_total:
+        np.testing.assert_approx_equal(np.sum(area), area_earth)
+        
+    return xr.DataArray(area, dims=(lat_name, lon_name), attrs={'units': 'm^2', 'long_name': 'area'})  

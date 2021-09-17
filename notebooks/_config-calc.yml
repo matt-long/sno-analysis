@@ -1,1 +1,2 @@
 flux-product-dir: "/glade/work/{{env['USER']}}/sno-analysis/flux-products"
+project-tmpdir: "/glade/work/{{env['USER']}}/sno-analysis"
