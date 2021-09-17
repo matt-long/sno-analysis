@@ -2,7 +2,7 @@ import os
 import yaml
 from jinja2 import Template
 
-required_keys = ["flux-product-dir"]
+required_keys = ["flux-product-dir", "project-tmpdir"]
 
 def get_config_dict():
     """return the configuration dictionary with environment variables replaced"""
@@ -29,3 +29,6 @@ config_dict = get_config_dict()
 # cache directory for big file
 flux_product_dir = config_dict["flux-product-dir"]
 os.makedirs(flux_product_dir, exist_ok=True)
+
+project_tmpdir = config_dict["project-tmpdir"]
+os.environ["INTAKE_LOCAL_CACHE_DIR"] = f"{project_tmpdir}/intake-cache"
