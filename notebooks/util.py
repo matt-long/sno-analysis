@@ -25,7 +25,7 @@ mols_to_Tmolmon = 1e-12 * 86400. * 365. / 12.
 µmolkg_to_mmolm3 = 1026. / 1000. # for volume conserving models, makes sense to use constant density
 kgCO2s_to_Tmolmon = 1000. / 12. * mols_to_Tmolmon
 W_to_PW = 1. / 1E15
-
+Re = 6.37122e6 # m, radius of Earth
 
 class missing_data_tracker(object):        
     def __init__(self): 
@@ -504,3 +504,69 @@ def _N2sol(S, T):
                                      B0=-7.44129e-3,
                                      B1=-8.02566e-3,
                                      B2=-1.46775e-2)
+
+
+def generate_latlon_grid(nx, ny, lon0=0.):
+    """
+    Generate a regular lat,lon grid file.
+
+    Parameters
+    ----------
+    nx: number of x points.
+    ny: number of y points.
+    
+    Returns
+    -------
+    
+    ds: dataset with grid variables
+    """
+    
+    deg2rad = np.pi / 180.
+
+    dx = 360./nx
+    dy = 180./ny
+
+    lat = np.arange(-90.+dy/2.,90.,dy)
+    lon = np.arange(lon0+dx/2.,lon0+360.,dx)
+
+    yc = np.broadcast_to(lat[:,None],(ny,nx))
+    xc = np.broadcast_to(lon[None,:],(ny,nx))
+
+    yv = np.stack((yc-dy/2.,yc-dy/2.,yc+dy/2.,yc+dy/2.),axis=2)
+    xv = np.stack((xc-dx/2.,xc+dx/2.,xc+dx/2.,xc-dx/2.),axis=2)
+
+    y0 = np.sin(yv[:,:,0]*deg2rad) # south
+    y1 = np.sin(yv[:,:,3]*deg2rad) # north
+    x0 = xv[:,:,0]*deg2rad         # west
+    x1 = xv[:,:,1]*deg2rad         # east
+    area = (y1 - y0) * (x1 - x0) * Re ** 2.
+
+    ds = xr.Dataset(
+        {"lat": xr.DataArray(lat,dims=("lat"),
+                            attrs={"units":"degrees_north",
+                                   "long_name":"Latitude"}),
+         "lon": xr.DataArray(lon,dims=("lon"),
+                            attrs={"units":"degrees_east",
+                            "long_name":"Longitude"})})
+
+    ds["xc"] = xr.DataArray(xc,dims=("lat","lon"),
+                            attrs={"units":"degrees_east",
+                                   "long_name":"longitude of cell centers"})
+
+    ds["yc"] = xr.DataArray(yc,dims=("lat","lon"),
+                            attrs={"units":"degrees_north",
+                                   "long_name":"latitude of cell centers"})
+
+    ds["xv"] = xr.DataArray(xv,dims=("lat","lon","nv"),
+                            attrs={"units":"degrees_east",
+                                   "long_name":"longitude of cell corners"})
+    
+    ds["yv"] = xr.DataArray(yv,dims=("lat","lon","nv"),
+                            attrs={"units":"degrees_north",
+                                   "long_name":"latitude of cell corners"})
+
+    ds["area"] = xr.DataArray(area,dims=("lat","lon"),
+                              attrs={"units":"m^2",
+                                     "long_name":"area"})
+
+    return ds
