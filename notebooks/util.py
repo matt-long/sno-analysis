@@ -157,6 +157,11 @@ def get_rmask_dict(grid, mask_definition, plot=False):
             NET=grid.areacello.where(grid[lat_varname] >= 20.).fillna(0.),
             SET=grid.areacello.where(grid[lat_varname] <= -20.).fillna(0.),
         )
+    elif mask_definition == 'SHL_NHL':
+        rmasks = dict(
+            NHL=grid.areacello.where(grid[lat_varname] >= 45.).fillna(0.),
+            SHL=grid.areacello.where(grid[lat_varname] < -45.).fillna(0.),
+        ) 
     elif mask_definition == 'SH_NH':
         rmasks = dict(
             NH=grid.areacello.where(grid[lat_varname] >= 0.).fillna(0.),
