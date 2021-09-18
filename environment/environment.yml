@@ -1,7 +1,6 @@
 name: sno
 channels:
     - conda-forge
-    - defaults
 dependencies:
     - black
     - bokeh=1.4
@@ -11,10 +10,10 @@ dependencies:
     - cftime
     - cmocean
     - conda-lock
-    - dask=2.14
+    - dask
     - dask-jobqueue
     - dask-mpi
-    - distributed=2.14
+    - distributed
     - eofs
     - esmpy
     - holoviews
@@ -25,6 +24,8 @@ dependencies:
     - jupyter-server-proxy
     - jupyter_contrib_nbextensions
     - jupyterlab
+    - jupyter-book
+    - jupyter_client==6.1.12
     - matplotlib
     - metpy
     - nc-time-axis
