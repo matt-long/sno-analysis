@@ -10,6 +10,8 @@ import intake
 
 import matplotlib.pyplot as plt
 
+import pop_tools
+
 # make variable so as to enable system dependence
 catalog_csv = '/glade/collections/cmip/catalog/intake-esm-datastore/catalogs/glade-cmip6.csv.gz'
 catalog_json = '/glade/collections/cmip/catalog/intake-esm-datastore/catalogs/glade-cmip6.json'
@@ -90,8 +92,11 @@ def get_gridvar(df, source_id, variable_id):
         & (df.grid_label == grid_label)
     ]   
     if len(df_sub) == 0:
-        print(f'{source_id}: missing "{variable_id}"')
-        return
+        if "CESM2" in source_id:
+            return pop_tools.get_grid("POP_gx1v7")[["TAREA"]].rename({"TAREA": "areacello"})
+        else:
+            print(f'{source_id}: missing "{variable_id}"')
+            return
     return xr.open_dataset(df_sub.iloc[0].path)
 
 
@@ -294,12 +299,19 @@ def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
     regions = []
     
     dims_lateral = tuple(d for d in ds[variable_id].dims if d not in ['time', 'member_id'])
-    
-    for key, rmask in rmasks.items():        
+
+    for key, rmask in rmasks.items():
+        
         assert rmask.dims == dims_lateral, 'dimension mismatch on region mask'
-        da = (ds[variable_id] * rmask).sum(dims_lateral) * convert
+        
+        # ensure that missing values are propagated to the mask
+        rmask_v = rmask.where(ds[variable_id].notnull()).fillna(0.)
+        
+        da = (ds[variable_id] * rmask_v).sum(dims_lateral) * convert
+
         if sumormean == 'mean':
-            da = da / rmask.sum(dims_lateral)
+            da = da / rmask_v.sum(dims_lateral)
+
         da.attrs['units'] = units_integral
         da.attrs['long_name'] = long_name
         da_list.append(da)
