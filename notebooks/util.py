@@ -70,6 +70,17 @@ class missing_data_tracker(object):
         self._init_df()
         os.remove(self.missing_data_file)
     
+
+    
+def id_and_search_vars(variable_name):
+    if ':' in variable_name:
+        search_vars = variable_name.split(':')[-1].split(',')
+        variable_id = variable_name.split(':')[0]        
+    else:
+        search_vars = [variable_name]
+        variable_id = variable_name
+    return variable_id, search_vars
+        
     
 def get_gridvar(df, source_id, variable_id):
     """get a grid variable from a source_id"""
