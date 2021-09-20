@@ -73,17 +73,10 @@ def dat2nc(dat_file_name, varname, long_name, shift_time=None, scaleby=None):
 
 def open_flux_dataset(shift_time=10., scaleby=0.82, clobber=False):
     """open flux dataset"""
-    
-    cache_file = f"{path_to_here}/garcia_keeling_airseaflux/GK2001.fluxes.dt={int(shift_time)}.scale={scaleby}.nc"
-    if os.path.exists(cache_file) and not clobber:
-        with xr.open_dataset(cache_file) as ds:
-            return ds
-    
     ds = xr.Dataset()
     for v, (dat_file_in, long_name) in files.items():
         file_in = os.path.join(droot, dat_file_in)
         dsi = dat2nc(file_in, v, long_name, shift_time=shift_time, scaleby=scaleby)
         ds = xr.merge((ds, dsi))
         
-    ds.to_netcdf(cache_file)
     return ds

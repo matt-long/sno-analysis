@@ -10,6 +10,8 @@ import intake
 
 import matplotlib.pyplot as plt
 
+import pop_tools
+
 # make variable so as to enable system dependence
 catalog_csv = '/glade/collections/cmip/catalog/intake-esm-datastore/catalogs/glade-cmip6.csv.gz'
 catalog_json = '/glade/collections/cmip/catalog/intake-esm-datastore/catalogs/glade-cmip6.json'
@@ -70,6 +72,17 @@ class missing_data_tracker(object):
         self._init_df()
         os.remove(self.missing_data_file)
     
+
+    
+def id_and_search_vars(variable_name):
+    if ':' in variable_name:
+        search_vars = variable_name.split(':')[-1].split(',')
+        variable_id = variable_name.split(':')[0]        
+    else:
+        search_vars = [variable_name]
+        variable_id = variable_name
+    return variable_id, search_vars
+        
     
 def get_gridvar(df, source_id, variable_id):
     """get a grid variable from a source_id"""
@@ -79,8 +92,11 @@ def get_gridvar(df, source_id, variable_id):
         & (df.grid_label == grid_label)
     ]   
     if len(df_sub) == 0:
-        print(f'{source_id}: missing "{variable_id}"')
-        return
+        if "CESM2" in source_id:
+            return pop_tools.get_grid("POP_gx1v7")[["TAREA"]].rename({"TAREA": "areacello"})
+        else:
+            print(f'{source_id}: missing "{variable_id}"')
+            return
     return xr.open_dataset(df_sub.iloc[0].path)
 
 
@@ -283,12 +299,19 @@ def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
     regions = []
     
     dims_lateral = tuple(d for d in ds[variable_id].dims if d not in ['time', 'member_id'])
-    
-    for key, rmask in rmasks.items():        
+
+    for key, rmask in rmasks.items():
+        
         assert rmask.dims == dims_lateral, 'dimension mismatch on region mask'
-        da = (ds[variable_id] * rmask).sum(dims_lateral) * convert
+        
+        # ensure that missing values are propagated to the mask
+        rmask_v = rmask.where(ds[variable_id].notnull()).fillna(0.)
+        
+        da = (ds[variable_id] * rmask_v).sum(dims_lateral) * convert
+
         if sumormean == 'mean':
-            da = da / rmask.sum(dims_lateral)
+            da = da / rmask_v.sum(dims_lateral)
+
         da.attrs['units'] = units_integral
         da.attrs['long_name'] = long_name
         da_list.append(da)
@@ -319,6 +342,8 @@ def compute_fgn2(ds):
     dcdt = _N2sol(ds['sos'],ds['tos']+0.5) - _N2sol(ds['sos'],ds['tos']-0.5)
     
     ds['fgn2'] = -1. * dcdt * ds['hfds'] / Cp * 1e-6 # umol/kg/K * W/m^2 / (J/kg/K) ==> mol m-2 s-1 (same as fgo2)
+    ds.fgn2.attrs["units"] = "mol m-2 s-1"
+    ds.fgn2.attrs["long_name"] = "N2 air-sea flux (computed from heat flux)"
     
     return ds
         
@@ -373,6 +398,8 @@ def compute_fgo2_thermal(ds):
     dcdt = _O2sol(ds['sos'],ds['tos']+0.5) - _O2sol(ds['sos'],ds['tos']-0.5)
     
     ds['fgo2_thermal'] = -1. * dcdt * ds['hfds'] / Cp * 1e-6 # umol/kg/K * W/m^2 / (J/kg/K) ==> mol m-2 s-1 (same as fgo2)
+    ds.fgo2_thermal.attrs["units"] = "mol m-2 s-1"
+    ds.fgo2_thermal.attrs["long_name"] = "O2 flux (thermal component)"
     
     return ds
 
@@ -387,6 +414,8 @@ def compute_fgapo(ds):
     dsi = compute_fgn2(ds)
     
     ds['fgapo'] = ds['fgo2'] + 1.1 * ds['fgco2'] - xo2/xn2 * dsi['fgn2'] # mol m-2 s-1 (same as fgo2)
+    ds.fgapo.attrs["units"] = "mol m-2 s-1"
+    ds.fgapo.attrs["long_name"] = "APO flux"
     
     return ds
 
@@ -430,7 +459,7 @@ def _garcia_gordon_polynomial(S, T,
 
 
 def N2solWeiss(S,T):
-    '''
+    """
     Solubility of N2 in sea water
     INPUT:  
     S = salinity    [PSS]
@@ -441,8 +470,8 @@ def N2solWeiss(S,T):
     "The solubility of nitrogen, oxygen and argon in water and seawater"
     Deep-sea Research, 17, pp. 721-735.
     
-    returns umol/kg
-    '''
+    returns µmol/kg
+    """
     
     # T is absolute T
     Tabs = 275.15 + T
@@ -482,7 +511,7 @@ def N2solWeiss(S,T):
 
 def N2solHamme(S,T):
     
-    '''
+    """
     # constants from Table 4 of Hamme and Emerson 2004
     Coef. Ne (nmol/kg) N2 (umol/kg) Ar (umol/kg)
     A0 2.18156 6.42931 2.79150
@@ -496,7 +525,7 @@ def N2solHamme(S,T):
     check values at temperature of 10 C and salinity of 35 (PSS)
     
     returns umol/kg
-    '''
+    """
     
     #rho_ref = 1.026 # g/cm3 (approx. at 15 C)
 
@@ -517,7 +546,7 @@ def N2solHamme(S,T):
 
 
 def _N2sol(S, T):
-    '''
+    """
     Solubility (saturation) of nitrogen (N2) in sea water
     at 1-atm pressure of air including saturated water vapor
    
@@ -532,7 +561,7 @@ def _N2sol(S, T):
     Roberta Hamme and Steve Emerson, 2004.
     "The solubility of neon, nitrogen and argon in distilled water and seawater."
     Deep-Sea Research I, 51(11), p. 1517-1528.
-    '''
+    """
    
     return _garcia_gordon_polynomial(S, T,
                                      A0=6.42931,
