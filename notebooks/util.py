@@ -403,7 +403,7 @@ def compute_fgo2_thermal(ds):
     
     return ds
 
-def compute_fgapo(ds):
+def compute_fgapo(ds,o2scale,co2scale,n2scale):
     """
     compute APO flux from O2, CO2, and N2 flux
     
@@ -413,7 +413,8 @@ def compute_fgapo(ds):
     """ 
     dsi = compute_fgn2(ds)
     
-    ds['fgapo'] = ds['fgo2'] + 1.1 * ds['fgco2'] - xo2/xn2 * dsi['fgn2'] # mol m-2 s-1 (same as fgo2)
+    # o2scale needed bc NorESM2-LM O2 is flipped
+    ds['fgapo'] = ds['fgo2'] * o2scale + 1.1 * ds['fgco2'] * co2scale - xo2/xn2 * dsi['fgn2'] * n2scale # mol m-2 s-1 (same as fgo2)
     ds.fgapo.attrs["units"] = "mol m-2 s-1"
     ds.fgapo.attrs["long_name"] = "APO flux"
     
