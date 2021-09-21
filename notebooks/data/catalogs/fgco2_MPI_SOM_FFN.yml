@@ -12,3 +12,18 @@ sources:
         simplecache:
           same_names: true
           cache_storage: "{{ env(INTAKE_LOCAL_CACHE_DIR) }}"
+  
+  fgapo_CarbonScope_apo99_v2020:
+    driver: netcdf
+    description: "Using an atmospheric inversion technique similar to the Jena CO2 inversion, sea-air oxygen exchanges have been estimated from atmospheric O2/N2 measurements (Rödenbeck et al., 2008). In order to eliminate the influence of land processes on atmospheric oxygen abundance, the tracer Atmospheric Potential Oxygen (APO) has been used (Stephens et al., 1998)."
+    args:
+      urlpath: simplecache::http://www.bgc-jena.mpg.de/CarboScope/apo/INVERSION/OUTPUT/apo99_v2020.nc
+      xarray_kwargs:
+        decode_times: true
+      chunks: {}
+      storage_options:
+        simplecache:
+          same_names: true
+          cache_storage: "{{ env(INTAKE_LOCAL_CACHE_DIR) }}"
+          
+          
