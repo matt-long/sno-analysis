@@ -12,6 +12,12 @@ import matplotlib.pyplot as plt
 
 import pop_tools
 
+import dask
+from dask_jobqueue import PBSCluster
+from dask.distributed import Client
+
+
+
 # make variable so as to enable system dependence
 catalog_csv = '/glade/collections/cmip/catalog/intake-esm-datastore/catalogs/glade-cmip6.csv.gz'
 catalog_json = '/glade/collections/cmip/catalog/intake-esm-datastore/catalogs/glade-cmip6.json'
@@ -30,6 +36,35 @@ W_to_PW = 1. / 1E15
 Re = 6.37122e6 # m, radius of Earth
 xo2 = 0.2094 
 xn2 = 0.7808
+
+
+project = "NEOL0004"
+
+
+def get_ClusterClient(memory="25GB"):
+    """return client and cluster"""
+    USER = os.environ['USER']
+    
+    cluster = PBSCluster(
+        cores=1,
+        memory='25GB',
+        processes=1,
+        queue='casper',
+        local_directory=f'/glade/scratch/{USER}/dask-workers',
+        log_directory=f'/glade/scratch/{USER}/dask-workers',
+        resource_spec='select=1:ncpus=1:mem=25GB',
+        project=project,
+        walltime='06:00:00',
+        interface='ib0',)
+
+    dask.config.set({
+        'distributed.dashboard.link':
+        'https://jupyterhub.hpc.ucar.edu/stable/user/{USER}/proxy/{port}/status'
+    })
+    client = Client(cluster)
+    return cluster, client
+
+
 
 class missing_data_tracker(object):        
     def __init__(self): 

@@ -56,7 +56,11 @@ def dat2nc(dat_file_name, varname, long_name, shift_time=None, scaleby=None):
         attrs={"units": "day of year"},
     )    
     dss = dss.assign_coords(time=time)    
-    dss["date"] = xr.DataArray(date, dims=("time"))        
+    dss["date"] = xr.DataArray(
+        date, dims=("time"),
+        attrs={"long_name": "date", "units": "YYYYMMDD"},
+    )
+
     
     dss[varname] = xr.DataArray(
         data, 
@@ -67,6 +71,8 @@ def dat2nc(dat_file_name, varname, long_name, shift_time=None, scaleby=None):
             "note": f"GK2001 adjustments applied: time shifted = +{shift_time} days; scaleby = {scaleby}",
         }
     )
+    dss.time.encoding["_FillValue"] = None
+    dss.date.encoding["_FillValue"] = None
     dss[varname].encoding["_FillValue"] = default_fillvals["f8"]
     
     return dss

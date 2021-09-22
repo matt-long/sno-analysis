@@ -1,4 +1,11 @@
+description: Flux datasets 
+
+plugins:
+  source:
+    - module: intake_xarray
+    
 sources:
+
   fgco2_MPI_SOM_FFN:
     driver: netcdf
     description: "An observation-based global monthly gridded sea surface pCO2 product from 1982 onward and its monthly climatology. Citation: Landschützer, P., Gruber, N., Bakker, D. C. E.: Decadal variations and trends of the global ocean carbon sink, Global Biogeochemical Cycles, 30, doi:10.1002/2015GB005359, 2016"
@@ -13,17 +20,49 @@ sources:
           same_names: true
           cache_storage: "{{ env(INTAKE_LOCAL_CACHE_DIR) }}"
   
+  
   fgapo_CarbonScope_apo99_v2020:
     driver: netcdf
     description: "Using an atmospheric inversion technique similar to the Jena CO2 inversion, sea-air oxygen exchanges have been estimated from atmospheric O2/N2 measurements (Rödenbeck et al., 2008). In order to eliminate the influence of land processes on atmospheric oxygen abundance, the tracer Atmospheric Potential Oxygen (APO) has been used (Stephens et al., 1998)."
     args:
       urlpath: simplecache::http://www.bgc-jena.mpg.de/CarboScope/apo/INVERSION/OUTPUT/apo99_v2020.nc
       xarray_kwargs:
-        decode_times: true
+        decode_times: false
       chunks: {}
       storage_options:
         simplecache:
           same_names: true
           cache_storage: "{{ env(INTAKE_LOCAL_CACHE_DIR) }}"
           
-          
+  fgco2_fff_odiac:
+    driver: netcdf
+    description: "Fossil fuel surface emissions"
+    parameters:
+      year:
+        description: 'Year'
+        type: int
+        default: 2010
+        min: 2000
+        max: 2019
+      month:
+        description: 'month'
+        type: int
+        default: 1
+        min: 1
+        max: 12
+      day:
+        description: 'day'
+        type: int
+        default: 1
+        min: 1
+        max: 31
+
+    args:
+      urlpath: simplecache::https://gmao.gsfc.nasa.gov/gmaoftp/sourish/ODIAC/2018/distrib/{{ "%04d" | format(year) }}/{{ "%02d" | format(month) }}/fossil_fuel_1x1_{{ "%04d" | format(year) }}{{ "%02d" | format(month) }}{{ "%02d" | format(day) }}.nc
+      xarray_kwargs:
+        decode_times: true
+      chunks: {}
+      storage_options:
+        simplecache:
+          same_names: true
+          cache_storage: "/glade/scratch/{{ env(USER) }}/ODIAC_SFCO2_FFF"

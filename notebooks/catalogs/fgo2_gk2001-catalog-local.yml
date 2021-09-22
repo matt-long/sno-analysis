@@ -1,0 +1,15 @@
+description: Garcia and Keeling (2001) flux datasets
+plugins:
+  source:
+  - module: intake_xarray
+sources:
+  fgo2_gk2001_Gruber:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/garcia-keeling.fgo2.gruber_ann.nc
+    description: GK2001 seasional fluxes with {product} annual mean
+    driver: netcdf
+  fgo2_gk2001_Resplandy:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/garcia-keeling.fgo2.resplandy_ann.nc
+    description: GK2001 seasional fluxes with {product} annual mean
+    driver: netcdf
