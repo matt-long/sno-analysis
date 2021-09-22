@@ -727,3 +727,7 @@ def compute_grid_area(ds, check_total=True):
         np.testing.assert_approx_equal(np.sum(area), area_earth)
         
     return xr.DataArray(area, dims=(lat_name, lon_name), attrs={'units': 'm^2', 'long_name': 'area'})  
+
+
+def yyyymmdd(year, month, day):
+    return year * 10000 + month * 100 + day
