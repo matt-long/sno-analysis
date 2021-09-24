@@ -374,7 +374,7 @@ def compute_fgn2(ds):
     """ 
     
     Cp = 3990.
-    dcdt = _N2sol(ds['sos'],ds['tos']+0.5) - _N2sol(ds['sos'],ds['tos']-0.5)
+    dcdt = _N2sol(ds['sos'], ds['tos'] + 0.5) - _N2sol(ds['sos'], ds['tos'] - 0.5)
     
     ds['fgn2'] = -1. * dcdt * ds['hfds'] / Cp * 1e-6 # umol/kg/K * W/m^2 / (J/kg/K) ==> mol m-2 s-1 (same as fgo2)
     ds.fgn2.attrs["units"] = "mol m-2 s-1"

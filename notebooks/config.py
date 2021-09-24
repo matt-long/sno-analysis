@@ -31,4 +31,5 @@ flux_product_dir = config_dict["flux-product-dir"]
 os.makedirs(flux_product_dir, exist_ok=True)
 
 project_tmpdir = config_dict["project-tmpdir"]
-os.environ["INTAKE_LOCAL_CACHE_DIR"] = f"{project_tmpdir}/intake-cache"
+intake_cachedir = f"{project_tmpdir}/intake-cache"
+os.environ["INTAKE_LOCAL_CACHE_DIR"] = intake_cachedir

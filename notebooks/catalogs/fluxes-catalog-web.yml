@@ -32,7 +32,7 @@ sources:
       storage_options:
         simplecache:
           same_names: true
-          cache_storage: "{{ env(INTAKE_LOCAL_CACHE_DIR) }}"
+          cache_storage: "{{ env(INTAKE_LOCAL_CACHE_DIR) }}/test"
           
   fgco2_fff_odiac:
     driver: netcdf

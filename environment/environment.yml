@@ -52,4 +52,6 @@ dependencies:
     - xhistogram # Fast, flexible, label-aware histograms for numpy and xarray
     - xrft # fourier transforms for xarray data
     - zarr
+    - pip:
+      - cdsapi
         
