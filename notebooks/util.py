@@ -105,7 +105,8 @@ class missing_data_tracker(object):
         
     def clobber(self):
         self._init_df()
-        os.remove(self.missing_data_file)
+        if os.path.exists(self.missing_data_file):
+            os.remove(self.missing_data_file)
     
 
     
