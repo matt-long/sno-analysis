@@ -1,0 +1,49 @@
+epc100:
+  cell_measures: 'area: areacello'
+  cell_methods: 'area: mean where sea time: mean'
+  long_name: Downward Flux of Particulate Organic Carbon
+  units: mol m-2 s-1
+fbddtdic:
+  cell_measures: 'area: areacello'
+  cell_methods: 'area: mean where sea depth: sum where sea (top 100m only) time: mean'
+  long_name: Rate of Change of Dissolved Inorganic Carbon Due to Biological Activity
+  units: mol m-2 s-1
+fgapo:
+  long_name: APO flux
+  units: mol m-2 s-1
+fgco2:
+  cell_measures: 'area: areacello'
+  cell_methods: 'area: mean where sea time: mean'
+  long_name: Surface Downward Flux of Total CO2
+  units: kg m-2 s-1
+fgn2:
+  long_name: N2 air-sea flux (computed from heat flux)
+  units: mol m-2 s-1
+fgo2:
+  cell_measures: 'area: areacello'
+  cell_methods: 'area: mean where sea time: mean'
+  long_name: Surface Downward Flux of O2
+  units: mol m-2 s-1
+fgo2_thermal:
+  long_name: O2 flux (thermal component)
+  units: mol m-2 s-1
+hfds:
+  cell_measures: 'area: areacello'
+  cell_methods: 'area: mean where sea time: mean'
+  long_name: Downward Heat Flux at Sea Water Surface
+  units: W m-2
+intpp:
+  cell_measures: 'area: areacello'
+  cell_methods: 'area: mean where sea depth: sum where sea time: mean'
+  long_name: Primary Organic Carbon Production by All Types of Phytoplankton
+  units: mol m-2 s-1
+sos:
+  cell_measures: 'area: areacello'
+  cell_methods: 'area: mean where sea time: mean'
+  long_name: Sea Surface Salinity
+  units: '0.001'
+tos:
+  cell_measures: 'area: areacello'
+  cell_methods: 'area: mean where sea time: mean'
+  long_name: Sea Surface Temperature
+  units: degC

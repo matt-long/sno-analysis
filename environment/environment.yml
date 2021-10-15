@@ -3,11 +3,11 @@ channels:
     - conda-forge
 dependencies:
     - black
-    - bokeh=1.4
+    - bokeh
     - bottleneck
     - cartopy
     - cf_units
-    - cftime
+    - cftime>=1.5.1
     - cmocean
     - conda-lock
     - dask
@@ -33,7 +33,7 @@ dependencies:
     - netcdf4
     - numba
     - numpy
-    - pandas
+    - pandas=1.2.5
     - pint
     - pip
     - pop-tools
@@ -46,7 +46,7 @@ dependencies:
     - toolz
     - tqdm
     - watermark
-    - xarray>=0.15.1
+    - xarray
     - xesmf # xarray interface it ESMF tools
     - xgcm # General Circulation Model Postprocessing with xarray
     - xhistogram # Fast, flexible, label-aware histograms for numpy and xarray

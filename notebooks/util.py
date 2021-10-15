@@ -1,8 +1,10 @@
 import os
+import yaml
 import numpy as np
 
 from toolz import curry
 
+import cftime
 import xarray as xr
 import pandas as pd
 
@@ -21,6 +23,9 @@ from dask.distributed import Client
 # make variable so as to enable system dependence
 catalog_csv = '/glade/collections/cmip/catalog/intake-esm-datastore/catalogs/glade-cmip6.csv.gz'
 catalog_json = '/glade/collections/cmip/catalog/intake-esm-datastore/catalogs/glade-cmip6.json'
+
+cache_catalog_csv = "catalogs/cmip6-process-cache.csv.gz" 
+cache_catalog_json = "catalogs/cmip6-process-cache.json" 
 
 cmip6_catalog = intake.open_esm_datastore(catalog_json)
 
@@ -41,6 +46,13 @@ xn2 = 0.7808
 project = "NEOL0004"
 
 
+
+def get_models_flipsign(variable_ids):
+    models_flipsign = {v.split(':')[0]: [] for v in variable_ids}
+    models_flipsign['fgo2'] = ['NorESM2-LM',]
+    return models_flipsign
+
+
 def get_ClusterClient(memory="25GB"):
     """return client and cluster"""
     USER = os.environ['USER']
@@ -57,15 +69,50 @@ def get_ClusterClient(memory="25GB"):
         walltime='06:00:00',
         interface='ib0',)
 
-    dask.config.set({
-        'distributed.dashboard.link':
-        'https://jupyterhub.hpc.ucar.edu/stable/user/{USER}/proxy/{port}/status'
-    })
+    jupyterhub_server_name = os.environ.get('JUPYTERHUB_SERVER_NAME', None)    
+    dashboard_link = 'https://jupyterhub.hpc.ucar.edu/stable/user/{USER}/proxy/{port}/status'    
+    if jupyterhub_server_name:
+        dashboard_link = (
+            'https://jupyterhub.hpc.ucar.edu/stable/user/'
+            + '{USER}'
+            + f'/{jupyterhub_server_name}/proxy/'
+            + '{port}/status'
+        )
+    dask.config.set({'distributed.dashboard.link': dashboard_link})        
     client = Client(cluster)
     return cluster, client
 
 
 
+class track_attrs(object):
+    """object for tracking variable attributes"""    
+    def __init__(self):
+        self._variable_attrs_file = "data/cache/cmip/cmip6.variable_attrs.yml"
+        if os.path.exists(self._variable_attrs_file):
+            with open(self._variable_attrs_file, "r") as fid:
+                self._variable_attrs = yaml.safe_load(fid)
+        else:        
+            self._variable_attrs = {}
+
+        self._attrs_keys = [
+            "long_name", "units", "description", "cell_methods", "cell_measures"
+        ]
+       
+    def update_attrs(self, variable_id, attrs, clobber=False):
+        if not variable_id in self._variable_attrs or clobber:
+            self._variable_attrs[variable_id] = {
+                k: attrs[k] for k in self._attrs_keys if k in attrs
+            }
+            self.persist()
+        
+    def persist(self):
+        with open(self._variable_attrs_file, "w") as fid:
+            yaml.dump(self._variable_attrs, fid)
+            
+    def __getitem__(self, key):
+        return self._variable_attrs[key]
+    
+    
 class missing_data_tracker(object):        
     def __init__(self): 
         """construct object for tracking missing data"""
@@ -136,28 +183,68 @@ def get_gridvar(df, source_id, variable_id):
     return xr.open_dataset(df_sub.iloc[0].path)
 
 
+def open_cmip_cached(operator_applied, region_mask):
+    variable_attrs = track_attrs()
+    cat = intake.open_esm_datastore(cache_catalog_json)
+    
+    dsets = cat.search(
+        operator_applied=operator_applied,
+        region_mask=region_mask,
+    ).to_dataset_dict()
+
+    for key, ds in dsets.items():
+        for var_id in ds.data_vars:
+            if not ds[var_id].attrs:
+                ds[var_id].attrs = variable_attrs[var_id]
+    return dsets
+    
 def open_cmip_dataset(source_id, variable_id, experiment_id, table_id,
-                      time_slice=None, nmax_members=None):
+                      time_slice=None, nmax_members=None, aggregate=True,
+                      preprocess=None,
+                     ):
     """return a dataset for a particular source_id, variable_id, experiment_id"""
 
     print('='*50) 
     print(f'{source_id}, {experiment_id}, {variable_id}')
     
-    cat_sub = cmip6_catalog.search(
-        source_id=source_id, 
-        variable_id=variable_id, 
-        experiment_id=experiment_id, 
-        table_id=table_id,
-        grid_label=grid_label,
-    )
+    if source_id == "UKESM1-0-LL":
+        cat_sub = cmip6_catalog.search(
+            institution_id="MOHC",
+            source_id=source_id, 
+            variable_id=variable_id, 
+            experiment_id=experiment_id, 
+            table_id=table_id,
+            grid_label=grid_label,
+        )
+    else:
+        cat_sub = cmip6_catalog.search(
+            source_id=source_id, 
+            variable_id=variable_id, 
+            experiment_id=experiment_id, 
+            table_id=table_id,
+            grid_label=grid_label,
+        )
+        
     df_sub = cat_sub.df    
     
-    dsets_dict = cat_sub.to_dataset_dict()    
+    with dask.config.set(**{"array.slicing.split_large_chunks": True}):    
+        dsets_dict = cat_sub.to_dataset_dict(
+            cdf_kwargs=dict(use_cftime=True), 
+            preprocess=preprocess,
+            aggregate=aggregate,
+        )
+        
     if len(dsets_dict) == 0: 
         print('no data')
         return
     
-    assert len(dsets_dict) == 1, 'expecting single dataset'    
+    if not aggregate:
+        return dsets_dict
+    
+    assert len(dsets_dict) == 1, (
+        f'expecting single dataset; got:\n {dsets_dict}\n\n' + 
+        f'{df_sub.path.to_list()}'
+    )
     key, ds = dsets_dict.popitem()
         
     member_ids = sorted(df_sub.member_id.unique().tolist())
@@ -173,24 +260,46 @@ def open_cmip_dataset(source_id, variable_id, experiment_id, table_id,
             phys = np.array(member_ids)
             forc = np.array(member_ids)
             for i in range(len(member_ids)):
-                real[i]=member_ids[i].split('r')[1].split('i')[0]
-                init[i]=member_ids[i].split('i')[1].split('p')[0]
-                phys[i]=member_ids[i].split('p')[1].split('f')[0]
-                forc[i]=member_ids[i].split('f')[1]
-            real=real.astype(int)
-            init=init.astype(int)
-            phys=phys.astype(int)
-            forc=forc.astype(int)      
-            member_ids_sorted=np.array(member_ids)[np.lexsort((real,init,phys,forc))]
+                real[i] = member_ids[i].split('r')[1].split('i')[0]
+                init[i] = member_ids[i].split('i')[1].split('p')[0]
+                phys[i] = member_ids[i].split('p')[1].split('f')[0]
+                forc[i] = member_ids[i].split('f')[1]
+            real = real.astype(int)
+            init = init.astype(int)
+            phys = phys.astype(int)
+            forc = forc.astype(int)      
+            member_ids_sorted = np.array(member_ids)[np.lexsort((real, init, phys, forc))]
             
             ds = ds.sel(member_id=member_ids_sorted[:nmax_members])
         
-    if time_slice is not None:
-        ds = ds.sel(time=time_slice)
+    if time_slice is not None:       
+        ds = ds.sel(time=_time_slice_cftime(time_slice, _get_calendar(ds)))
         
     return ds
 
 
+def _get_calendar(ds):
+    if "calendar" in ds.time.encoding:
+        return ds.time.encoding["calendar"]
+    elif "calendar" in ds.time.attrs:
+        return ds.time.attrs["calendar"]
+    else:
+        raise ValueError("cannot determine calendar")
+
+def _time_slice_cftime(time_slice, calendar):
+    """temporary workaround for bug in xarray-pandas-cftime
+    See here: https://zulip2.cloud.ucar.edu/#narrow/stream/10-python-questions/topic/datetime.20index/near/44187
+    """
+    assert len(time_slice.start) == 4
+    assert len(time_slice.stop) == 4
+    y1, y2 = int(time_slice.start), int(time_slice.stop)
+    dec31 = 30 if calendar == "360_day" else 31
+    return slice(
+        cftime.datetime(y1, 1, 1, calendar=calendar), 
+        cftime.datetime(y2, 12, dec31, calendar=calendar)
+    )
+        
+        
 def get_rmask_dict(grid, mask_definition, plot=False):
     """return a dictionary of masked area DataArray's"""
     # determine the latitude variable name
