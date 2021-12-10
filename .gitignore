@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 PET0.RegridWeightGen.Log
 notebooks/ecmwf_credentials.yaml
+notes.md
