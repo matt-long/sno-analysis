@@ -1,0 +1,52 @@
+description: World Ocean Atlas, v2018
+
+plugins:
+  source:
+    - module: intake_xarray
+    
+sources:
+
+  salinity:
+    driver: netcdf
+    description: "Salinity decav data from WOA2018"
+    parameters:
+      time_code:
+        description: '00 = annual; 01-12 = monthly; 13-16 = seasonal'
+        type: int
+        default: 0
+        min: 0
+        max: 16
+
+
+    args:
+      urlpath: simplecache::https://www.ncei.noaa.gov/data/oceans/woa/WOA18/DATA/salinity/netcdf/decav/1.00/woa18_decav_s{{ "%02d" | format(time_code) }}_01.nc
+      xarray_kwargs:
+        decode_times: false
+      chunks: {}
+      storage_options:
+        simplecache:
+          same_names: true
+          cache_storage: "/glade/scratch/{{ env(USER) }}/WOA2018"
+
+  temperature:
+    driver: netcdf
+    description: "Temperature decav data from WOA2018"
+    parameters:
+      time_code:
+        description: '00 = annual; 01-12 = monthly; 13-16 = seasonal'
+        type: int
+        default: 0
+        min: 0
+        max: 16
+
+
+    args:
+      urlpath: simplecache::https://www.ncei.noaa.gov/data/oceans/woa/WOA18/DATA/temperature/netcdf/decav/1.00/woa18_decav_t{{ "%02d" | format(time_code) }}_01.nc
+      xarray_kwargs:
+        decode_times: false
+      chunks: {}
+      storage_options:
+        simplecache:
+          same_names: true
+          cache_storage: "/glade/scratch/{{ env(USER) }}/WOA2018"
+

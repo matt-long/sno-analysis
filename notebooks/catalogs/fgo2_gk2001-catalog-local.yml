@@ -5,11 +5,13 @@ plugins:
 sources:
   fgo2_gk2001_Gruber:
     args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/garcia-keeling.fgo2.gruber_ann.nc
-    description: GK2001 seasional fluxes with {product} annual mean
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/garcia-keeling.fgo2.shft_10d.scale_0.82.gruber_ann.nc
+    description: GK2001 seasional fluxes with Gruber annual mean; time axis shifted
+      by 10.0d, fluxes scaled by 0.82
     driver: netcdf
   fgo2_gk2001_Resplandy:
     args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/garcia-keeling.fgo2.resplandy_ann.nc
-    description: GK2001 seasional fluxes with {product} annual mean
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/garcia-keeling.fgo2.shft_10d.scale_0.82.resplandy_ann.nc
+    description: GK2001 seasional fluxes with Resplandy annual mean; time axis shifted
+      by 10.0d, fluxes scaled by 0.82
     driver: netcdf

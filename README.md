@@ -10,3 +10,8 @@ To create an environment from the lock file
 ```bash
 conda create -n sno --file environment/conda-linux-64.lock
 ```
+
+To add user to the project directory on Cheyenne:
+```bash
+setfacl --modify default:user:USERNAME:rwx ${project_dir}
+```

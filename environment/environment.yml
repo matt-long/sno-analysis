@@ -7,6 +7,7 @@ dependencies:
     - bottleneck
     - cartopy
     - cf_units
+    - cfgrib
     - cftime>=1.5.1
     - cmocean
     - conda-lock

@@ -470,7 +470,7 @@ def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
     return var
 
 
-def compute_fgn2(ds):
+def compute_fgn2(ds, scaleby=1.):
     """
     compute N2 flux from heat flux and temperature derivative of solubility
     
@@ -483,10 +483,15 @@ def compute_fgn2(ds):
     dcdt is in units of umol/kg/K
     """ 
     
+    sos = ds['sos']
+    tos = ds['tos']
+    hfds = ds['hfds']
+
+        
     Cp = 3990.
-    dcdt = _N2sol(ds['sos'], ds['tos'] + 0.5) - _N2sol(ds['sos'], ds['tos'] - 0.5)
+    dcdt = _N2sol(sos, tos + 0.5) - _N2sol(sos, tos - 0.5)
     
-    ds['fgn2'] = -1. * dcdt * ds['hfds'] / Cp * 1e-6 # umol/kg/K * W/m^2 / (J/kg/K) ==> mol m-2 s-1 (same as fgo2)
+    ds['fgn2'] = -1.0 * scaleby *  dcdt * hfds / Cp * 1e-6 # umol/kg/K * W/m^2 / (J/kg/K) ==> mol m-2 s-1 (same as fgo2)
     ds.fgn2.attrs["units"] = "mol m-2 s-1"
     ds.fgn2.attrs["long_name"] = "N2 air-sea flux (computed from heat flux)"
     
@@ -548,7 +553,7 @@ def compute_fgo2_thermal(ds):
     
     return ds
 
-def compute_fgapo(ds,o2scale,co2scale,n2scale):
+def compute_fgapo(ds, o2scale, co2scale, n2scale):
     """
     compute APO flux from O2, CO2, and N2 flux
     
@@ -604,7 +609,7 @@ def _garcia_gordon_polynomial(S, T,
                   S*(B0 + B1*T_scaled + B2*T_scaled**2. + B3*T_scaled**3.) + C0 * S**2.)
 
 
-def N2solWeiss(S,T):
+def N2solWeiss(S, T):
     """
     Solubility of N2 in sea water
     INPUT:  
@@ -762,6 +767,8 @@ def generate_latlon_grid(nx, ny, lon0=0.):
                             attrs={"units":"degrees_east",
                             "long_name":"Longitude"})})
 
+  
+    
     ds["xc"] = xr.DataArray(xc,dims=("lat","lon"),
                             attrs={"units":"degrees_east",
                                    "long_name":"longitude of cell centers"})
@@ -781,6 +788,9 @@ def generate_latlon_grid(nx, ny, lon0=0.):
     ds["area"] = xr.DataArray(area,dims=("lat","lon"),
                               attrs={"units":"m^2",
                                      "long_name":"area"})
+
+    for v in ds.variables:
+        ds[v].encoding["_FillValue"] = None
 
     return ds
 
@@ -841,3 +851,17 @@ def compute_grid_area(ds, check_total=True):
 
 def yyyymmdd(year, month, day):
     return year * 10000 + month * 100 + day
+
+
+def gen_midmonth_cftime_coord(year_range, shift_time=0.):
+    yr0, yrf = year_range
+    s = xr.cftime_range(start=f'{yr0}-01-01', end=f'{yrf}-12-31', freq='MS')
+    e = xr.cftime_range(start=f'{yr0}-01-01', end=f'{yrf+1}-01-01', freq='M')
+    units = 'days since 0001-01-01 00:00:00'
+    time_data = cftime.num2date(
+        (cftime.date2num(s, units) - 1 + cftime.date2num(e, units)) / 2. + shift_time, 
+        units,
+    )
+    time = xr.DataArray(time_data, dims=('time'), name='time')
+    time.attrs['shift_time'] = shift_time
+    return time

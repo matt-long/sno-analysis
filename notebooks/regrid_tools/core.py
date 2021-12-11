@@ -66,7 +66,7 @@ class grid(object):
             f"grid: {self.grid_name}\ndims: {self.dims}\nfile: {self.grid_file}"
         )        
 
-def latlon_to_scrip(nx, ny, lon0=-180., grid_imask=None, file_out=None):
+def latlon_to_scrip(nx=None, ny=None, lon=None, lat=None, lon0=-180., grid_imask=None, file_out=None):
     """Generate a SCRIP grid file for a regular lat x lon grid.
     
     Parameters
@@ -91,12 +91,27 @@ def latlon_to_scrip(nx, ny, lon0=-180., grid_imask=None, file_out=None):
        The grid file dataset.       
     """
     
-    # compute coordinates of regular grid
-    dx = 360. / nx
-    dy = 180. / ny
-    lat = np.arange(-90. + dy / 2., 90., dy)
-    lon = np.arange(lon0 + dx / 2., lon0 + 360., dx)
+    if nx is not None and ny is not None:
+        assert lon is None
+        assert lat is None
+        # compute coordinates of regular grid
+        dx = 360. / nx
+        dy = 180. / ny
+        lat = np.arange(-90. + dy / 2., 90., dy)
+        lon = np.arange(lon0 + dx / 2., lon0 + 360., dx)
+    elif lon is not None and lat is not None:
+        assert nx is None
+        assert ny is None
+        nx, ny = len(lon), len(lat)
+        dx = lon[1] - lon[0]
+        dy = lat[1] - lat[0]
+        print(dx)
+        print(dy)
+        
+    else:
+        raise ValueError('arguments inconsistent')
 
+        
     # make 2D
     y_center = np.broadcast_to(lat[:, None], (ny, nx))
     x_center = np.broadcast_to(lon[None, :], (ny, nx))

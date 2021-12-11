@@ -6,7 +6,7 @@ plugins:
     
 sources:
 
-  fgco2_MPI_SOM_FFN:
+  fgco2_MPI_SOM_FFN_v2018:
     driver: netcdf
     description: "An observation-based global monthly gridded sea surface pCO2 product from 1982 onward and its monthly climatology. Citation: Landschützer, P., Gruber, N., Bakker, D. C. E.: Decadal variations and trends of the global ocean carbon sink, Global Biogeochemical Cycles, 30, doi:10.1002/2015GB005359, 2016"
     args:
