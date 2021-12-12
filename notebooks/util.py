@@ -1,12 +1,20 @@
 import os
+import sys
+import subprocess
+
+import warnings
 import yaml
-import numpy as np
 
 from toolz import curry
 
+from datetime import datetime, timezone
 import cftime
+
+import numpy as np
 import xarray as xr
 import pandas as pd
+
+from netCDF4 import default_fillvals
 
 import intake
 
@@ -45,6 +53,14 @@ xn2 = 0.7808
 
 project = "NEOL0004"
 
+
+git_repo = (subprocess
+            .check_output(['git', 'config', '--get', 'remote.origin.url'])
+            .strip()
+            .decode("utf-8")
+            .replace('git@github.com:', 'https://github.com/')
+            .replace('.git', '')            
+           )
 
 
 def get_models_flipsign(variable_ids):
@@ -853,15 +869,107 @@ def yyyymmdd(year, month, day):
     return year * 10000 + month * 100 + day
 
 
-def gen_midmonth_cftime_coord(year_range, shift_time=0.):
+def gen_midmonth_cftime_coord(year_range, shift_time=0., climatology_year_end=[]):
+    
     yr0, yrf = year_range
     s = xr.cftime_range(start=f'{yr0}-01-01', end=f'{yrf}-12-31', freq='MS')
     e = xr.cftime_range(start=f'{yr0}-01-01', end=f'{yrf+1}-01-01', freq='M')
-    units = 'days since 0001-01-01 00:00:00'
-    time_data = cftime.num2date(
-        (cftime.date2num(s, units) - 1 + cftime.date2num(e, units)) / 2. + shift_time, 
-        units,
-    )
+    
+    units = f'days since {yr0:04d}-01-01 00:00:00'
+    
+    time_bounds_data = np.vstack((cftime.date2num(s, units), cftime.date2num(e, units) + 1)).T
+    time_data = cftime.num2date(time_bounds_data.mean(axis=1).round(), units)
+
     time = xr.DataArray(time_data, dims=('time'), name='time')
-    time.attrs['shift_time'] = shift_time
-    return time
+    time.attrs['shift_time'] = shift_time            
+    time.encoding['units'] = units
+    time.encoding['dtype'] = np.float64    
+    time.encoding['_FillValue'] = None
+    
+    if climatology_year_end:
+        
+        for i in range(time_bounds_data.shape[0]):
+            da = cftime.num2date(time_bounds_data[i, 1], units)
+            time_bounds_data[i, 1] = cftime.date2num(
+                cftime.datetime(climatology_year_end, da.month, da.day), units,
+            )
+            
+        time.attrs['climatology'] = 'climatology_bounds'        
+            
+        time_bnds = xr.DataArray(
+            cftime.num2date(time_bounds_data, units),
+            dims=('time', 'd2'), 
+            coords={'time': time},
+            name='climatology_bounds',
+        )                    
+        
+    else:
+        time.attrs['bounds'] = 'time_bnds'
+
+        time_bnds = xr.DataArray(
+            cftime.num2date(time_bounds_data, units),
+            dims=('time', 'd2'), 
+            coords={'time': time},
+            name='time_bnds',
+        )                    
+
+
+    
+    time_bnds.encoding['dtype'] = np.float64
+    time_bnds.encoding['_FillValue'] = None
+    
+    return time, time_bnds
+
+
+def gen_date_variable(time):
+    return xr.DataArray(
+        [yyyymmdd(d.year, d.month, d.day) for d in time.values],
+        dims=('time'),
+        coords={'time': time},
+        attrs={'long_name': 'Date', 'units': 'YYYYMMDD'},
+        name='date',
+    )
+
+def to_netcdf_clean(dset, path, format='NETCDF3_64BIT', **kwargs):
+    """wrap to_netcdf method to circumvent some xarray shortcomings"""
+    
+    dset = dset.copy()
+    
+    git_sha = subprocess.check_output(['git', 'describe', '--always']).strip().decode("utf-8")
+    datestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    provenance_str = f'created by {git_repo}/tree/{git_sha} on {datestamp}'
+
+    if 'history' in dset.attrs:
+        dset.attrs['history'] += '; ' + provenance_str
+    else:
+        dset.attrs['history'] = provenance_str    
+    
+    
+    # ensure _FillValues are not added where they don't exist
+    for v in dset.coords:
+        if '_FillValue' not in dset[v].encoding:
+            dset[v].encoding['_FillValue'] = None
+    
+    for v in dset.data_vars:
+        if dset[v].dtype in [np.float32, np.float64]:
+            dset[v].encoding['_FillValue'] = default_fillvals['f4']
+            dset[v].encoding['dtype'] = np.float32
+        
+        elif dset[v].dtype in [np.int32, np.int64]:
+            dset[v].encoding['_FillValue'] = default_fillvals['i4']
+            dset[v].encoding['dtype'] = np.int32            
+        elif dset[v].dtype == object:
+            pass
+        else:
+            warnings.warn(f'warning: unrecognized dtype for {v}: {dset[v].dtype}')
+    
+    sys.stderr.flush()
+            
+    print('-'*30)
+    print(f'Writing {path}')
+    dset.to_netcdf(path, format=format, **kwargs)    
+    dumps = subprocess.check_output(['ncdump', '-h', path]).strip().decode("utf-8")
+    print(dumps)
+    dumps = subprocess.check_output(['ncdump', '-k', path]).strip().decode("utf-8")
+    print(f'format: {dumps}')    
+    print('-'*30)

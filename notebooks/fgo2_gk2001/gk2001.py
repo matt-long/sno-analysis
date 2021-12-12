@@ -31,7 +31,7 @@ bom = np.concatenate((np.array([0.]), eom[0:11]))
 np.testing.assert_array_equal(eom - bom, dpm)
 
 
-def dat2nc(dat_file_name, varname, long_name, shift_time=None, scaleby=None):
+def dat2nc(dat_file_name, varname, long_name, scaleby=None):
     """read Garcia & Keeling data file and convert to `xarray.Dataset`.
        Optionally apply temporal shift and flux scaling.
     """
@@ -44,9 +44,6 @@ def dat2nc(dat_file_name, varname, long_name, shift_time=None, scaleby=None):
     data = data / dpm[:, None, None] * 365.
     data[data==0.] = np.nan
     
-    if shift_time is not None:
-        time = time + shift_time
-        date = date + shift_time
     
     if scaleby is not None:
         data = data * scaleby
@@ -68,7 +65,7 @@ def dat2nc(dat_file_name, varname, long_name, shift_time=None, scaleby=None):
         attrs={
             "long_name": long_name, 
             "units": "mol/m^2/yr",
-            "note": f"GK2001 adjustments applied: time shifted = +{shift_time} days; scaleby = {scaleby}",
+            "note": f"GK2001 adjustments applied: scaleby = {scaleby}",
         }
     )
     dss.time.encoding["_FillValue"] = None
@@ -77,12 +74,12 @@ def dat2nc(dat_file_name, varname, long_name, shift_time=None, scaleby=None):
     
     return dss
 
-def open_flux_dataset(shift_time=10., scaleby=0.82, clobber=False):
+def open_flux_dataset(scaleby=1., clobber=False):
     """open flux dataset"""
     ds = xr.Dataset()
     for v, (dat_file_in, long_name) in files.items():
         file_in = os.path.join(droot, dat_file_in)
-        dsi = dat2nc(file_in, v, long_name, shift_time=shift_time, scaleby=scaleby)
+        dsi = dat2nc(file_in, v, long_name, scaleby=scaleby)
         ds = xr.merge((ds, dsi))
         
     return ds
