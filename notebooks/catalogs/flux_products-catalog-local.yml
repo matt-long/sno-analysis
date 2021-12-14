@@ -1,0 +1,54 @@
+description: Flux products for transport modeling
+plugins:
+  source:
+  - module: intake_xarray
+sources:
+  fgapo.carboscope.apo99_v2020:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgapo_ocn.CarboScope.apo99_v2020.nc
+      xarray_kwargs:
+        decode_times: false
+    description: APO fluxes from CarboScope inversion apo99_v2020
+    driver: netcdf
+  fgco2.MPI-SOM-FFN:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgco2.MPI-SOM-FFN.v2018.monclim_2009-2018.nc
+      xarray_kwargs:
+        decode_times: false
+    description: "An observation-based global monthly gridded sea surface pCO2 product\
+      \ from 1982 onward and its monthly climatology. Citation: Landsch\xFCtzer, P.,\
+      \ Gruber, N., Bakker, D. C. E.: Decadal variations and trends of the global\
+      \ ocean carbon sink, Global Biogeochemical Cycles, 30, doi:10.1002/2015GB005359,\
+      \ 2016"
+    driver: netcdf
+  fgco2.cesm_fosi_smyle:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgco2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20201231.nc
+      xarray_kwargs:
+        decode_times: false
+    description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
+      at daily resolution
+    driver: netcdf
+  fgn2.era5_shf:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgn2.era5-shf.shft_0d.scale_0.77.1990-2020.nc
+      xarray_kwargs:
+        decode_times: false
+    description: N2 flux computed from ERA5 heat flux
+    driver: netcdf
+  fgo2.cesm_fosi_smyle:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgo2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20201231.nc
+      xarray_kwargs:
+        decode_times: false
+    description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
+      at daily resolution
+    driver: netcdf
+  fgo2.gk2001_Resplandy:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgo2.garcia-keeling.monclim.shft_0d.scale_0.82.resplandy_ann.nc
+      xarray_kwargs:
+        decode_times: false
+    description: GK2001 seasional fluxes with Resplandy annual mean; time axis shifted
+      by 0.0d, fluxes scaled by 0.82
+    driver: netcdf

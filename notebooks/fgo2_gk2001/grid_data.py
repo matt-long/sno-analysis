@@ -1,5 +1,8 @@
 import os
 from collections import OrderedDict
+
+import csv
+
 import numpy as np
 import xarray as xr
 
@@ -74,9 +77,9 @@ def generate_latlon_grid(nx, ny, lon0=0., include_vertices=False):
     return ds
 
 
-mask_cache_file = f"{path_to_here}/basin-mask.nc"
 
-def open_mask_dataset(clobber=False):
+
+def open_mask_dataset(res=1, clobber=False):
     """
     ### Make a basin mask on 1x1 grid
 
@@ -87,14 +90,30 @@ def open_mask_dataset(clobber=False):
    
     Documentation found here: https://data.nodc.noaa.gov/woa/WOA13/DOC/woa13documentation.pdf
     """
+    assert res in [1, 0.25]
+    res_code = '01' if res == 1 else '04'
+    mask_cache_file = f"{path_to_here}/basin-mask_{res_code}.nc"
+    
     if os.path.exists(mask_cache_file) and not clobber:
         return xr.open_dataset(mask_cache_file)
-    
-    nx = 360
-    ny = 180
-    ds = generate_latlon_grid(nx=nx,ny=ny,lon0=-180., include_vertices=False)
+
+    if res == 1:
+        nx = 360
+        ny = 180
+        ds = generate_latlon_grid(nx=nx,ny=ny,lon0=-180., include_vertices=False)
+        basinmask_csvfile = f'{path_to_here}/basinmask_01.msk'
+        landsea_csvfile = f'{path_to_here}/landsea_01.msk'    
+
+    elif res == 0.25:
+        nx = 1440
+        ny = 720
+        ds = generate_latlon_grid(nx=nx,ny=ny,lon0=-180., include_vertices=False)
+        basinmask_csvfile = f'{path_to_here}/basinmask_04.msk'
+        landsea_csvfile = f'{path_to_here}/landsea_04.msk'    
+        
     ds['mask'] = xr.DataArray(np.zeros(ds.area.shape).astype(int),dims=('lat','lon'))
     ds['kmt'] = xr.DataArray(np.zeros(ds.area.shape).astype(int),dims=('lat','lon'))
+        
 
     #--- basin mask
     # The basin_XX.msk contains the basin code number defined for each grid square at each
@@ -106,12 +125,10 @@ def open_mask_dataset(clobber=False):
     lat_ndx = 0
     lon_ndx = 1
     mask_ndx = 2
-
-    csvfile = f'{path_to_here}/basinmask_01.msk'
-    with open(csvfile, 'rt') as f:
+    with open(basinmask_csvfile, 'rt') as f:
         csvdata = csv.reader(f, delimiter=',',skipinitialspace=True)
 
-        for ir,row in enumerate(csvdata):
+        for ir, row in enumerate(csvdata):
             if ir < 2:
                 pass
             else:
@@ -130,12 +147,10 @@ def open_mask_dataset(clobber=False):
     lat_ndx = 0
     lon_ndx = 1
     mask_ndx = 2
-
-    csvfile = f'{path_to_here}/landsea_01.msk'
-    with open(csvfile, 'rt') as f:
+    with open(landsea_csvfile, 'rt') as f:
         csvdata = csv.reader(f, delimiter=',',skipinitialspace=True)
 
-        for ir,row in enumerate(csvdata):
+        for ir, row in enumerate(csvdata):
             if ir < 2:
                 pass
             else:
@@ -155,7 +170,7 @@ def open_mask_dataset(clobber=False):
         (55<ds.lat) & (ds.lat<80) & 
         (ds.mask_orig==11.) & (-80<ds.lon) & (ds.lon<-45.), 1., ds.mask.values)
 
-    #-- change definition of Southern Ocean to encompass region south of Terra del Fuego
+    #-- change definition of Southern Ocean to encompass region south of Tierra del Fuego
     # atlantic
     ds.mask.values = np.where(
         (-58.<ds.lat) & (ds.mask_orig==10.) & 
@@ -180,18 +195,18 @@ def open_mask_dataset(clobber=False):
 def _get_basin_aggregation(product):
     """aggregate region mask into basins"""
     if product.lower() == "resplandy":
-        my_regions = OrderedDict([('Global' , [1.,2.,3.,5.,10.,11.,12.,56.]),
-                                  ('Pacific' , [2.,12.]),
-                                  ('Atlantic' , [1.,5.]),
-                                  ('Indian' , [3.,56.]),
+        my_regions = OrderedDict([('Global' , [1., 2., 3., 5., 10., 11., 12., 56.]),
+                                  ('Pacific' , [2., 12.]),
+                                  ('Atlantic' , [1., 5.]),
+                                  ('Indian' , [3., 56.]),
                                   ('Arctic', [11.]),
                                   ('Southern_Ocean' , [10.])])
 
     elif product.lower() == "gruber":
-        my_regions = OrderedDict([('Global' , [1.,2.,3.,4.,5.,9.,10.,11.,12.,56.]),
-                                  ('Pacific' , [2.,12.]),
-                                  ('Atlantic' , [1.,4.,5.,9.]),
-                                  ('Indian' , [3.,56.]),
+        my_regions = OrderedDict([('Global' , [1., 2., 3., 4., 5., 9., 10., 11., 12., 56.]),
+                                  ('Pacific' , [2., 12.]),
+                                  ('Atlantic' , [1., 4., 5., 9.]),
+                                  ('Indian' , [3., 56.]),
                                   ('Arctic', [11.]),
                                   ('Southern_Ocean' , [10.])])
     else:
@@ -308,7 +323,7 @@ def _get_inversion_regions(product):
 
     ds['REGION_MASK'] = ds.REGION_MASK_3D.isel(region=0)
     for i in range(nrgn):
-        ds.REGION_MASK.values = np.where(ds.REGION_MASK_3D[i,:,:]==1,i+1,ds.REGION_MASK)
+        ds.REGION_MASK.values = np.where(ds.REGION_MASK_3D[i,:,:] == 1, i+1, ds.REGION_MASK)
         
     ds["region"] = xr.DataArray(list(my_regions.keys()), dims=("region"))
     return ds

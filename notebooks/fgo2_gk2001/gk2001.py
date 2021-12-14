@@ -42,7 +42,7 @@ def dat2nc(dat_file_name, varname, long_name, scaleby=None):
     date = np.round(2000 * 10000 + np.arange(1,13,1) * 100. + dpm/2.)
     data = np.loadtxt(dat_file_name).ravel().reshape((nt, ny, nx))
     data = data / dpm[:, None, None] * 365.
-    data[data==0.] = np.nan
+    #data[data==0.] = np.nan
     
     
     if scaleby is not None:
@@ -61,7 +61,7 @@ def dat2nc(dat_file_name, varname, long_name, scaleby=None):
     
     dss[varname] = xr.DataArray(
         data, 
-        dims=("time","lat","lon"),        
+        dims=("time", "lat", "lon"),        
         attrs={
             "long_name": long_name, 
             "units": "mol/m^2/yr",
@@ -81,5 +81,5 @@ def open_flux_dataset(scaleby=1., clobber=False):
         file_in = os.path.join(droot, dat_file_in)
         dsi = dat2nc(file_in, v, long_name, scaleby=scaleby)
         ds = xr.merge((ds, dsi))
-        
+    ds['mask'] = (ds.fgo2_sea == 0.).all(dim='time').astype(np.int32)        
     return ds

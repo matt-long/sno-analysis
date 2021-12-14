@@ -1,5 +1,6 @@
 ### Inversion-region O2 fluxes Tmol/y
 # Table 3/Fig. 6 of Gruber et al. 2001
+# Gruber reports a Global flux of 0.00
 gruber:
   fluxes:
     "1": -9.4

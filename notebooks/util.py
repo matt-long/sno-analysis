@@ -776,35 +776,35 @@ def generate_latlon_grid(nx, ny, lon0=0.):
     area = (y1 - y0) * (x1 - x0) * Re ** 2.
 
     ds = xr.Dataset(
-        {"lat": xr.DataArray(lat,dims=("lat"),
-                            attrs={"units":"degrees_north",
-                                   "long_name":"Latitude"}),
-         "lon": xr.DataArray(lon,dims=("lon"),
-                            attrs={"units":"degrees_east",
-                            "long_name":"Longitude"})})
+        {"lat": xr.DataArray(lat,dims=("lat")),         
+         "lon": xr.DataArray(lon,dims=("lon")),
+        })
 
   
     
-    ds["xc"] = xr.DataArray(xc,dims=("lat","lon"),
+    ds["xc"] = xr.DataArray(xc,dims=("lat", "lon"),
                             attrs={"units":"degrees_east",
                                    "long_name":"longitude of cell centers"})
 
-    ds["yc"] = xr.DataArray(yc,dims=("lat","lon"),
+    ds["yc"] = xr.DataArray(yc,dims=("lat", "lon"),
                             attrs={"units":"degrees_north",
                                    "long_name":"latitude of cell centers"})
 
-    ds["xv"] = xr.DataArray(xv,dims=("lat","lon","nv"),
+    ds["xv"] = xr.DataArray(xv,dims=("lat", "lon", "nv"),
                             attrs={"units":"degrees_east",
                                    "long_name":"longitude of cell corners"})
     
-    ds["yv"] = xr.DataArray(yv,dims=("lat","lon","nv"),
+    ds["yv"] = xr.DataArray(yv,dims=("lat", "lon",  "nv"),
                             attrs={"units":"degrees_north",
                                    "long_name":"latitude of cell corners"})
 
-    ds["area"] = xr.DataArray(area,dims=("lat","lon"),
+    ds["area"] = xr.DataArray(area,dims=("lat", "lon"),
                               attrs={"units":"m^2",
                                      "long_name":"area"})
 
+    ds.lon.attrs = {"units": "degrees_east", "long_name":"Longitude"}
+    ds.lat.attrs={"units": "degrees_north", "long_name": "Latitude"}
+    
     for v in ds.variables:
         ds[v].encoding["_FillValue"] = None
 
@@ -878,7 +878,7 @@ def gen_midmonth_cftime_coord(year_range, shift_time=0., climatology_year_end=[]
     units = f'days since {yr0:04d}-01-01 00:00:00'
     
     time_bounds_data = np.vstack((cftime.date2num(s, units), cftime.date2num(e, units) + 1)).T
-    time_data = cftime.num2date(time_bounds_data.mean(axis=1).round(), units)
+    time_data = cftime.num2date(time_bounds_data.mean(axis=1), units)
 
     time = xr.DataArray(time_data, dims=('time'), name='time')
     time.attrs['shift_time'] = shift_time            
@@ -930,6 +930,54 @@ def gen_date_variable(time):
         name='date',
     )
 
+def gen_time_components_variable(time, year_offset=0.):
+    
+    if isinstance(time, xr.DataArray):
+        time_data = time.values
+    else:
+        time_data = time
+        
+    tc = xr.DataArray(
+        [(d.year + year_offset, d.month, d.day, d.hour, d.minute, d.second) for d in time_data],
+        dims=('time', 'n_time_components'),
+        coords={'time': time},
+        attrs={'long_name': 'time components (year, month, day, hour, min, sec)', 'units': 'none'},
+        name='time_components',
+    )
+    tc.encoding['_FillValue'] = None
+    tc.encoding['dtype'] = np.int32
+    return tc
+
+def gen_daily_cftime_coord(year_range):
+
+    yr0, yrf = year_range
+    s = xr.cftime_range(start=f'{yr0}-01-01', end=f'{yrf}-12-31', freq='D')
+    e = xr.cftime_range(start=f'{yr0}-01-02', end=f'{yrf+1}-01-01', freq='D')
+
+    units = f'days since {yr0:04d}-01-01 00:00:00'
+
+    time_bounds_data = np.vstack((cftime.date2num(s, units), cftime.date2num(e, units))).T
+    time_data = cftime.num2date(time_bounds_data.mean(axis=1), units)
+
+    time = xr.DataArray(time_data, dims=('time'), name='time')
+    time.encoding['units'] = units
+    time.encoding['dtype'] = np.float64    
+    time.encoding['_FillValue'] = None
+
+    time.attrs['bounds'] = 'time_bnds'
+
+    time_bnds = xr.DataArray(
+        cftime.num2date(time_bounds_data, units),
+        dims=('time', 'd2'), 
+        coords={'time': time},
+        name='time_bnds',
+    )                    
+
+    time_bnds.encoding['dtype'] = np.float64
+    time_bnds.encoding['_FillValue'] = None
+
+    return time, time_bnds
+
 def to_netcdf_clean(dset, path, format='NETCDF3_64BIT', **kwargs):
     """wrap to_netcdf method to circumvent some xarray shortcomings"""
     
@@ -945,10 +993,9 @@ def to_netcdf_clean(dset, path, format='NETCDF3_64BIT', **kwargs):
         dset.attrs['history'] = provenance_str    
     
     
-    # ensure _FillValues are not added where they don't exist
+    # ensure _FillValues are not added to coordinates
     for v in dset.coords:
-        if '_FillValue' not in dset[v].encoding:
-            dset[v].encoding['_FillValue'] = None
+        dset[v].encoding['_FillValue'] = None
     
     for v in dset.data_vars:
         if dset[v].dtype in [np.float32, np.float64]:
@@ -973,3 +1020,56 @@ def to_netcdf_clean(dset, path, format='NETCDF3_64BIT', **kwargs):
     dumps = subprocess.check_output(['ncdump', '-k', path]).strip().decode("utf-8")
     print(f'format: {dumps}')    
     print('-'*30)
+    
+    
+class curate_flux_products(object):    
+    
+    def __init__(self):
+        
+        self.catalog_file = "catalogs/flux_products-catalog-local.yml"
+        if os.path.exists(self.catalog_file):
+            with open(self.catalog_file, "r") as fid:
+                self.catalog = yaml.safe_load(fid)               
+        else:
+            self.catalog = yaml.safe_load(
+                """
+                description: Flux products for transport modeling
+
+                plugins:
+                  source:
+                    - module: intake_xarray
+
+                sources: {}
+                """
+            )
+    
+    def add_source(self, key, urlpath, description, driver='netcdf', xarray_kwargs=None):
+        """add a new source to the catalog"""
+        if xarray_kwargs is None:
+            xarray_kwargs = dict(
+                decode_times=False,
+            )
+        
+        self.catalog['sources'][key] = dict(
+            driver=driver,
+            description=description,
+            args=dict(
+                urlpath=urlpath,
+                xarray_kwargs=xarray_kwargs,
+            )
+        )
+        self.persist()
+        
+    def persist(self):
+        """write the catalog to disk"""        
+        with open(self.catalog_file, "w") as fid:
+            yaml.dump(self.catalog, fid)    
+    
+    def open_catalog(self):
+        """return as intake catalog"""
+        return intake.open_catalog(self.catalog_file)
+    
+    def __repr__(self):
+        return self.catalog.__repr__()
+    
+    

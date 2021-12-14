@@ -247,12 +247,13 @@ def esmf_apply_weights(weights, indata, shape_in, shape_out):
         return outdata
     
     
-def esmf_regrid_weight_gen(src_grid_file, dst_grid_file, weight_file, method, clobber=False):
+def esmf_regrid_weight_gen(src_grid_file, dst_grid_file, weight_file, method, extrap_method='none', clobber=False):
     """generate regridding weights by calling out to ESMF"""
     if not os.path.exists(weight_file) or clobber:
         print(f"generating: {weight_file}")
-        cmd = ["ESMF_RegridWeightGen", "--netcdf4", "--ignore_unmapped",
-                    "-s", src_grid_file, "-d", dst_grid_file, "-m", method, "-w", weight_file]
+        cmd = ["ESMF_RegridWeightGen", "--netcdf4", "--ignore_unmapped", 
+               "--extrap_method", extrap_method,
+               "-s", src_grid_file, "-d", dst_grid_file, "-m", method, "-w", weight_file]
         out = subprocess.run(cmd, capture_output=True, check=True)
         print(out.stdout.decode("UTF-8"))
         
@@ -260,17 +261,17 @@ def esmf_regrid_weight_gen(src_grid_file, dst_grid_file, weight_file, method, cl
 class regridder(object):
     """simple class to enable regridding"""
     
-    def __init__(self, src_grid, dst_grid, method="bilinear", clobber=False):
+    def __init__(self, src_grid, dst_grid, method="bilinear", extrap_method='none', clobber=False):
         
         self.src_grid_file = src_grid.grid_file
         self.dst_grid_file = dst_grid.grid_file
         self.method = method
         
         
-        self.weight_file = f"{regrid_dir}/{src_grid.grid_name}_to_{dst_grid.grid_name}_{method}.nc"   
+        self.weight_file = f"{regrid_dir}/{src_grid.grid_name}_to_{dst_grid.grid_name}_{method}_extrap-{extrap_method}.nc"   
         
         esmf_regrid_weight_gen(
-            self.src_grid_file, self.dst_grid_file, self.weight_file, self.method, clobber
+            self.src_grid_file, self.dst_grid_file, self.weight_file, self.method, extrap_method, clobber
         )
                 
         self.dims_src = src_grid.dims

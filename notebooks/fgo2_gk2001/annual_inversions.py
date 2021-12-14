@@ -35,19 +35,18 @@ def open_inversion_annual_flux(product, gk_grid=False):
     ds = grid_data._get_inversion_regions(product)
     nlat, nlon = len(ds.lat), len(ds.lon)
     nrgn = len(ds.region)
-    
+       
     if gk_grid:        
         nlat, nlon = 160, 320
         dsGK01 = grid_data.generate_latlon_grid(nx=nlon, ny=nlat, lon0=-180.)
         dsGK01["region"] = ds.region
         
         x, y = np.meshgrid(ds.lon, ds.lat)
-        xi, yi = np.meshgrid(dsGK01.lon, dsGK01.lat)
-        
+        xi, yi = np.meshgrid(dsGK01.lon, dsGK01.lat)        
         data = interpolate.griddata(
             (x.ravel(), y.ravel()), ds.REGION_MASK.values.ravel(), (xi, yi), 
             method='nearest',
-        )        
+        )
         dsGK01['REGION_MASK'] = xr.DataArray(data, dims=('lat','lon'))
         dsGK01['REGION_MASK_3D'] = xr.DataArray(
             np.zeros((nrgn, nlat, nlon)), dims=('region','lat','lon'),
