@@ -23,7 +23,7 @@ sources:
     driver: netcdf
   fgco2.cesm_fosi_smyle:
     args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgco2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20201231.nc
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgco2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20181231.nc
       xarray_kwargs:
         decode_times: false
     description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
@@ -38,7 +38,7 @@ sources:
     driver: netcdf
   fgo2.cesm_fosi_smyle:
     args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgo2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20201231.nc
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgo2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20181231.nc
       xarray_kwargs:
         decode_times: false
     description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
