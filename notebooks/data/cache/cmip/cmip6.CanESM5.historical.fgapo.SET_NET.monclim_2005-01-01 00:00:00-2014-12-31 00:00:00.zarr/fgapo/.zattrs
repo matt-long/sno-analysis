@@ -1,8 +1,0 @@
-{
-    "_ARRAY_DIMENSIONS": [
-        "region",
-        "month"
-    ],
-    "long_name": "APO flux",
-    "units": "Tmol APO month$^{-1}$"
-}
