@@ -34,9 +34,9 @@ sources:
           same_names: true
           cache_storage: "{{ env(INTAKE_LOCAL_CACHE_DIR) }}/test"
           
-  fgco2_fff_odiac:
+  fgco2_fff_odiac_2018:
     driver: netcdf
-    description: "Fossil fuel surface emissions"
+    description: "Fossil fuel surface emissions (v2018)"
     parameters:
       year:
         description: 'Year'
@@ -65,4 +65,4 @@ sources:
       storage_options:
         simplecache:
           same_names: true
-          cache_storage: "/glade/scratch/{{ env(USER) }}/ODIAC_SFCO2_FFF"
+          cache_storage: "/glade/scratch/{{ env(USER) }}/ODIAC_SFCO2_FFF_2018"
