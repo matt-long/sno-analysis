@@ -35,6 +35,7 @@ sources:
           cache_storage: "{{ env(INTAKE_LOCAL_CACHE_DIR) }}/test"
           
   fgco2_fff_odiac_2018:
+    # To use: ds = cat[f'fgco2_fff_odiac_{version}'](year=value.year, month=value.month, day=value.day).to_dask()
     driver: netcdf
     description: "Fossil fuel surface emissions (v2018)"
     parameters:
