@@ -29,6 +29,14 @@ sources:
     description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
       at daily resolution
     driver: netcdf
+  fgn2.cesm_fosi_smyle:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgn2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20181231.nc
+      xarray_kwargs:
+        decode_times: false
+    description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
+      at monthly resolution
+    driver: netcdf
   fgn2.era5_shf:
     args:
       urlpath: /glade/work/mclong/sno-analysis/flux-products/fgn2.era5-shf.shft_0d.scale_0.77.1990-2020.nc

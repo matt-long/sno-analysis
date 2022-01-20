@@ -13,6 +13,7 @@ import util
 
 grid_1x1 = util.generate_latlon_grid(nx=360, ny=180, lon0=-180.)
 
+
 def _open_dataset(path, add_time=False):
     try:
         ds = xr.open_dataset(path, chunks={'time': 24})
