@@ -26,6 +26,8 @@ import dask
 from dask_jobqueue import PBSCluster
 from dask.distributed import Client
 
+import solubility
+
 
 
 # make variable so as to enable system dependence
@@ -41,14 +43,14 @@ cmip6_catalog = intake.open_esm_datastore(catalog_json)
 grid_label = 'gn'
 
 # constants
-T0_Kelvin = 273.15
 mols_to_Tmolmon = 1e-12 * 86400. * 365. / 12.
 µmolkg_to_mmolm3 = 1026. / 1000. # for volume conserving models, makes sense to use constant density
 kgCO2s_to_Tmolmon = 1000. / 12. * mols_to_Tmolmon
 W_to_PW = 1. / 1E15
 Re = 6.37122e6 # m, radius of Earth
-xo2 = 0.2094 
-xn2 = 0.7808
+
+X_O2 = 0.2094 
+X_N2 = 0.7808
 
 
 project = "NEOL0004"
@@ -61,12 +63,6 @@ git_repo = (subprocess
             .replace('git@github.com:', 'https://github.com/')
             .replace('.git', '')            
            )
-
-
-def get_models_flipsign(variable_ids):
-    models_flipsign = {v.split(':')[0]: [] for v in variable_ids}
-    models_flipsign['fgo2'] = ['NorESM2-LM',]
-    return models_flipsign
 
 
 def get_ClusterClient(memory="25GB"):
@@ -213,11 +209,28 @@ def open_cmip_cached(operator_applied, region_mask):
             if not ds[var_id].attrs:
                 ds[var_id].attrs = variable_attrs[var_id]
     return dsets
+
+
+
+def get_member_id_list(source_id, experiment_id, table_id, require_vars):
     
-def open_cmip_dataset(source_id, variable_id, experiment_id, table_id,
+    for i, variable_id in enumerate(require_vars):
+        cat_sub = cmip6_catalog.search(
+            source_id=source_id, 
+            variable_id=variable_id, 
+            experiment_id=experiment_id, 
+            table_id=table_id,
+            grid_label='gn',
+        )
+        member_ids_var_i = set(cat_sub.df.member_id.unique())
+        member_ids = member_ids_var_i if i == 0 else member_ids.intersection(member_ids_var_i)
+    
+    return list(member_ids)
+
+
+def open_cmip_dataset(source_id, variable_id, experiment_id, table_id, member_id,
                       time_slice=None, nmax_members=None, aggregate=True,
-                      preprocess=None,
-                     ):
+                      preprocess=None,):
     """return a dataset for a particular source_id, variable_id, experiment_id"""
 
     print('='*50) 
@@ -230,6 +243,7 @@ def open_cmip_dataset(source_id, variable_id, experiment_id, table_id,
             variable_id=variable_id, 
             experiment_id=experiment_id, 
             table_id=table_id,
+            member_id=member_id,
             grid_label=grid_label,
         )
     else:
@@ -238,6 +252,7 @@ def open_cmip_dataset(source_id, variable_id, experiment_id, table_id,
             variable_id=variable_id, 
             experiment_id=experiment_id, 
             table_id=table_id,
+            member_id=member_id,            
             grid_label=grid_label,
         )
         
@@ -270,7 +285,8 @@ def open_cmip_dataset(source_id, variable_id, experiment_id, table_id,
     if nmax_members is not None:                     
         if len(member_ids) > nmax_members:
             
-            # sort ensemble members to prioritize physics and forcing 1, and to sort realizations numerically 
+            # sort ensemble members to prioritize physics and forcing 1 and 
+            # to sort realizations numerically 
             real = np.array(member_ids)
             init = np.array(member_ids)
             phys = np.array(member_ids)
@@ -374,7 +390,7 @@ def get_rmask_dict(grid, mask_definition, plot=False):
     return rmasks
 
 
-def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
+def compute_regional_integral(ds, variable_id, rmasks):
     """return a DataArray of the regional integral of ds[variable_id]"""
     if variable_id == 'fgo2':
         assert (ds[variable_id].attrs['units'] == 'mol m-2 s-1')
@@ -452,10 +468,7 @@ def compute_regional_integral(ds, variable_id, rmasks, flipsign=False):
     else:
         raise NotImplementedError(f'add "{variable_id}" to integral definitions')
 
-    
-    if flipsign:
-        convert = convert * (-1.0)
-    
+       
     da_list = []
     regions = []
     
@@ -505,7 +518,7 @@ def compute_fgn2(ds, scaleby=1.):
 
         
     Cp = 3990.
-    dcdt = _N2sol(sos, tos + 0.5) - _N2sol(sos, tos - 0.5)
+    dcdt = solubility.N2(sos, tos + 0.5) - solubility.N2(sos, tos - 0.5)
     
     ds['fgn2'] = -1.0 * scaleby *  dcdt * hfds / Cp * 1e-6 # umol/kg/K * W/m^2 / (J/kg/K) ==> mol m-2 s-1 (same as fgo2)
     ds.fgn2.attrs["units"] = "mol m-2 s-1"
@@ -561,7 +574,7 @@ def compute_fgo2_thermal(ds):
     """ 
     
     Cp = 3990.
-    dcdt = _O2sol(ds['sos'],ds['tos']+0.5) - _O2sol(ds['sos'],ds['tos']-0.5)
+    dcdt = solubility.O2(ds['sos'],ds['tos']+0.5) - solubility.O2(ds['sos'],ds['tos']-0.5)
     
     ds['fgo2_thermal'] = -1. * dcdt * ds['hfds'] / Cp * 1e-6 # umol/kg/K * W/m^2 / (J/kg/K) ==> mol m-2 s-1 (same as fgo2)
     ds.fgo2_thermal.attrs["units"] = "mol m-2 s-1"
@@ -569,175 +582,22 @@ def compute_fgo2_thermal(ds):
     
     return ds
 
-def compute_fgapo(ds, o2scale, co2scale, n2scale):
+
+def compute_fgapo(ds):
     """
     compute APO flux from O2, CO2, and N2 flux
     
     using 
     
-    Fapo = Fo2 + 1.1 * Fco2 - Xo2/Xn2 * Fn2 
+    Fapo = Fo2 + 1.1 * Fco2 - X_O2/X_N2 * Fn2 
     """ 
     dsi = compute_fgn2(ds)
     
-    # o2scale needed bc NorESM2-LM O2 is flipped
-    ds['fgapo'] = ds['fgo2'] * o2scale + 1.1 * ds['fgco2'] * co2scale - xo2/xn2 * dsi['fgn2'] * n2scale # mol m-2 s-1 (same as fgo2)
+    ds['fgapo'] = ds['fgo2'] + 1.1 * ds['fgco2'] - X_O2 / X_N2 * dsi['fgn2'] # mol m-2 s-1 (same as fgo2)
     ds.fgapo.attrs["units"] = "mol m-2 s-1"
     ds.fgapo.attrs["long_name"] = "APO flux"
     
     return ds
-
-def _O2sol(S, T):
-    """
-    Solubility of O2 in sea water
-    INPUT:
-    S = salinity    [PSS]
-    T = temperature [degree C]
-
-    conc = solubility of O2 [µmol/kg]
-
-    REFERENCE:
-    Hernan E. Garcia and Louis I. Gordon, 1992.
-    "Oxygen solubility in seawater: Better fitting equations"
-    Limnology and Oceanography, 37, pp. 1307-1312.
-    """
- 
-    return _garcia_gordon_polynomial(S, T,
-                                     A0=5.80871,
-                                     A1=3.20291,
-                                     A2=4.17887,
-                                     A3=5.10006,
-                                     A4=-9.86643e-2,
-                                     A5=3.80369,
-                                     B0=-7.01577e-3,
-                                     B1=-7.70028e-3,
-                                     B2=-1.13864e-2,
-                                     B3=-9.51519e-3,
-                                     C0=-2.75915e-7)
-
-
-def _garcia_gordon_polynomial(S, T,
-                              A0=0., A1 = 0., A2 = 0., A3=0., A4=0., A5=0.,
-                              B0=0., B1=0., B2=0., B3=0.,
-                              C0=0.):
-
-    T_scaled = np.log((298.15 - T) /(T0_Kelvin + T))
-    return np.exp(A0 + A1*T_scaled + A2*T_scaled**2. + A3*T_scaled**3. + A4*T_scaled**4. + A5*T_scaled**5. + \
-                  S*(B0 + B1*T_scaled + B2*T_scaled**2. + B3*T_scaled**3.) + C0 * S**2.)
-
-
-def N2solWeiss(S, T):
-    """
-    Solubility of N2 in sea water
-    INPUT:  
-    S = salinity    [PSS]
-    T = temperature [degree C]
-    
-    REFERENCE:
-    Weiss, 1970.
-    "The solubility of nitrogen, oxygen and argon in water and seawater"
-    Deep-sea Research, 17, pp. 721-735.
-    
-    returns µmol/kg
-    """
-    
-    # T is absolute T
-    Tabs = 275.15 + T
-    
-    rho_ref = 1.026 # g/cm3 (approx. at 15 C)
-
-    # these were coeffs or Bunsen solubility coeff:
-    #A1 = -59.6274
-    #A2 = 85.7661
-    #A3 = 24.3696
-    #B1 = -0.051580
-    #B2 = 0.026329
-    #B3 = -0.0037252
-
-    #N2_sol_an = np.log(A1 + A2*(100.0/T) + S*(B1 + B2*(T/100.0) + B3*((T/100.0)**2)))
-    #units_ml_kg__umol_kg = 1.0/0.022391
-    #N2_sol = N2_sol_an*units_ml_kg__umol_kg
-    #return _umolkg_to_mmolm3(N2_sol)
-
-    # this looks like the equation for Bunsen solubility coeff, but should be np.exp not np.log, also missing A3 term and unit conversion:
-    #return np.log(A1 + A2*(100.0/T) + S*(B1 + B2*(T/100.0) + B3*((T/100.0)**2)))
-    
-    # these are coeffs and equation for ml/kg
-    A1 = -177.0212
-    A2 = 254.6078
-    A3 = 146.3611 
-    A4 = -22.0933
-    B1 = -0.054052 
-    B2 = 0.027266
-    B3 = -0.0038430
-    
-    ml_per_kg_to_mmol_per_m3 = 1 / 22.4 * rho_ref * 1e3 
-    ml_to_umol = 1 / 22.4 * 1e3
-
-    return np.exp(A1 + A2*(100.0/Tabs) + A3*np.log(Tabs/100) + A4*(Tabs/100) + S*(B1 + B2*(Tabs/100.0) + B3*(Tabs/100.0)**2)) * ml_to_umol ## * ml_per_kg_to_mmol_per_m3
-
-
-def N2solHamme(S,T):
-    
-    """
-    # constants from Table 4 of Hamme and Emerson 2004
-    Coef. Ne (nmol/kg) N2 (umol/kg) Ar (umol/kg)
-    A0 2.18156 6.42931 2.79150
-    A1 1.29108 2.92704 3.17609
-    A2 2.12504 4.32531 4.13116
-    A3 0 4.69149 4.90379
-    B0 -5.94737E-3 -7.44129E-3 -6.96233E-3
-    B1 -5.13896E-3 -8.02566E-3 -7.66670E-3
-    B2 0 -1.46775E-2 -1.16888E-2
-    Check: 7.34121 500.885 13.4622
-    check values at temperature of 10 C and salinity of 35 (PSS)
-    
-    returns umol/kg
-    """
-    
-    #rho_ref = 1.026 # g/cm3 (approx. at 15 C)
-
-    A0 = 6.42931
-    A1 = 2.92704
-    A2 = 4.32531
-    A3 = 4.69149
-    B0 = -7.44129E-3
-    B1 = -8.02566E-3
-    B2 = -1.46775E-2
-    
-    #ln C = A0 + A1*Ts + A2*Ts^2 + A3*Ts^3 + S (B0 + B1 * Ts + B2 * Ts^2)
-    #Ts = ln((298.15 - t)/(273.15 + t)
-    
-    T_scaled = np.log((298.15 - T) /(273.15 + T))
-    return np.exp(A0 + A1*T_scaled + A2*T_scaled**2. + A3*T_scaled**3. + \
-                  S*(B0 + B1*T_scaled + B2*T_scaled**2.)) ## * rho_ref # convert to mmol/m^3/atm
-
-
-def _N2sol(S, T):
-    """
-    Solubility (saturation) of nitrogen (N2) in sea water
-    at 1-atm pressure of air including saturated water vapor
-   
-    INPUT:  (if S and T are not singular they must have same dimensions)
-    S = salinity    [PSS]
-    T = temperature [degree C]
-   
-    OUTPUT:
-    conc = solubility of N2  [µmol/kg]
-   
-    REFERENCE:
-    Roberta Hamme and Steve Emerson, 2004.
-    "The solubility of neon, nitrogen and argon in distilled water and seawater."
-    Deep-Sea Research I, 51(11), p. 1517-1528.
-    """
-   
-    return _garcia_gordon_polynomial(S, T,
-                                     A0=6.42931,
-                                     A1=2.92704,
-                                     A2=4.32531,
-                                     A3=4.69149,
-                                     B0=-7.44129e-3,
-                                     B1=-8.02566e-3,
-                                     B2=-1.46775e-2)
 
 
 def generate_latlon_grid(nx, ny, lon0=0.):
@@ -978,6 +838,7 @@ def gen_daily_cftime_coord(year_range):
 
     return time, time_bnds
 
+
 def to_netcdf_clean(dset, path, format='NETCDF3_64BIT', **kwargs):
     """wrap to_netcdf method to circumvent some xarray shortcomings"""
     
@@ -1071,5 +932,6 @@ class curate_flux_products(object):
     
     def __repr__(self):
         return self.catalog.__repr__()
+    
     
     
