@@ -71,7 +71,7 @@ def get_ClusterClient(memory="25GB"):
     
     cluster = PBSCluster(
         cores=1,
-        memory='25GB',
+        memory=memory,
         processes=1,
         queue='casper',
         local_directory=f'/glade/scratch/{USER}/dask-workers',
@@ -523,6 +523,7 @@ def compute_fgn2(ds, scaleby=1.):
     ds['fgn2'] = -1.0 * scaleby *  dcdt * hfds / Cp * 1e-6 # umol/kg/K * W/m^2 / (J/kg/K) ==> mol m-2 s-1 (same as fgo2)
     ds.fgn2.attrs["units"] = "mol m-2 s-1"
     ds.fgn2.attrs["long_name"] = "N2 air-sea flux (computed from heat flux)"
+    ds.fgn2.attrs['note'] = f'fluxes computed using F = c * (-dC/dT) * Q/Cp; c = {scaleby:0.4f}'
     
     return ds
         
