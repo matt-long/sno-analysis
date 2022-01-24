@@ -31,12 +31,12 @@ def _open_dataset(path, add_time=False):
         time.encoding['dtype'] = np.float64    
         time.encoding['_FillValue'] = None        
         
-        dso['emission'] = ds.emission.sum('n_hour').expand_dims('time') / 12. / 86400.
-        dso.emission.attrs = {k: v for k, v in ds.emission.attrs.items() if k != 'unit'}
-        dso.emission.attrs['long_name'] = 'Fossil fuel flux'
-        dso.emission.attrs['units'] = 'mol/m^2/s'                    
-        dso.emission.attrs['cell_methods'] = 'time: sum'                            
-        dso.emission.encoding['_FillValue'] = default_fillvals['f8']
+        dso['fgco2'] = ds.emission.sum('n_hour').expand_dims('time') / 12. / 86400.
+        dso.fgco2.attrs = {k: v for k, v in ds.emission.attrs.items() if k != 'unit'}
+        dso.fgco2.attrs['long_name'] = 'Fossil fuel flux'
+        dso.fgco2.attrs['units'] = 'mol/m^2/s'                    
+        dso.fgco2.attrs['cell_methods'] = 'time: sum'                            
+        dso.fgco2.encoding['_FillValue'] = default_fillvals['f8']
         
         t0 = cftime.date2num(cftime.datetime(year, month, day, 0), units_time)
         time_bounds_data = cftime.num2date(np.array([[t0, t0+1]]), units_time)        
