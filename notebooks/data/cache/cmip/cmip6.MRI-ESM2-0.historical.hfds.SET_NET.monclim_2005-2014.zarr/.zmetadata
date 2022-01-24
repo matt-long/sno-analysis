@@ -31,7 +31,12 @@
                 "region",
                 "month"
             ],
+            "cell_measures": "area: areacello",
+            "cell_methods": "area: mean where sea time: mean",
+            "comment": "This is the net flux of heat entering the liquid water column through its upper surface (excluding any 'flux adjustment') .",
+            "history": "2020-02-12T14:06:43Z altered by CMOR: replaced missing value flag (-9.99e+33) and corresponding data with standard missing value (1e+20).",
             "long_name": "Heat flux",
+            "standard_name": "surface_downward_heat_flux_in_sea_water",
             "units": "PW"
         },
         "month/.zarray": {

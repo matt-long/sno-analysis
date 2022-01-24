@@ -12,7 +12,7 @@ sources:
     driver: netcdf
   fgco2.MPI-SOM-FFN:
     args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgco2.MPI-SOM-FFN.v2018.monclim_2009-2018.nc
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgco2.MPI-SOM-FFN.v2021.199501-202012.nc
       xarray_kwargs:
         decode_times: false
     description: "An observation-based global monthly gridded sea surface pCO2 product\
@@ -21,9 +21,17 @@ sources:
       \ ocean carbon sink, Global Biogeochemical Cycles, 30, doi:10.1002/2015GB005359,\
       \ 2016"
     driver: netcdf
+  fgco2.ODIAC-FF.OCO2-MIP:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgco2.ODIAC-FF.OCO2-MIP.20000101-20201231.nc
+      xarray_kwargs:
+        decode_times: false
+    description: daily integral of ODIAC Fossil Fuel CO2 Emissions for the OCO2 Model
+      Intercomparison Project (MIP)
+    driver: netcdf
   fgco2.cesm_fosi_smyle:
     args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgco2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20181231.nc
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgco2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20201231.nc
       xarray_kwargs:
         decode_times: false
     description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
@@ -31,7 +39,7 @@ sources:
     driver: netcdf
   fgn2.cesm_fosi_smyle:
     args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgn2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20181231.nc
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgn2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20201231.nc
       xarray_kwargs:
         decode_times: false
     description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
@@ -46,7 +54,7 @@ sources:
     driver: netcdf
   fgo2.cesm_fosi_smyle:
     args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgo2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20181231.nc
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgo2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20201231.nc
       xarray_kwargs:
         decode_times: false
     description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005

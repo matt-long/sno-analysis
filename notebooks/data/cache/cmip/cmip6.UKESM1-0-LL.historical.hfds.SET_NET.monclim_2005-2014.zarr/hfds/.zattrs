@@ -3,6 +3,11 @@
         "region",
         "month"
     ],
+    "cell_measures": "area: areacello",
+    "cell_methods": "area: mean where sea time: mean",
+    "comment": "This is the net flux of heat entering the liquid water column through its upper surface (excluding any 'flux adjustment') .",
     "long_name": "Heat flux",
+    "original_name": "mo: (variable_name: hfds)",
+    "standard_name": "surface_downward_heat_flux_in_sea_water",
     "units": "PW"
 }

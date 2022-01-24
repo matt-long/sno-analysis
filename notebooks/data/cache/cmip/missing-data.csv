@@ -1,14 +1,7 @@
 source_id,experiment_id,table_id,variable_id,grid_label
 CanESM5,historical,Omon,fbddtdic,gn
 CNRM-ESM2-1,historical,Omon,fbddtdic,gn
-MPI-ESM1-2-HR,historical,Omon,sos,gn
-MPI-ESM1-2-HR,historical,Omon,hfds,gn
-MPI-ESM1-2-HR,historical,Omon,fbddtdic,gn
-MPI-ESM1-2-HR,historical,Omon,epc100,gn
+ACCESS-ESM1-5,historical,Omon,fbddtdic,gn
 NorESM2-LM,historical,Omon,fbddtdic,gn
 UKESM1-0-LL,historical,Omon,fbddtdic,gn
-MIROC-ES2L,historical,Omon,hfds,gn
-MIROC-ES2L,historical,Omon,fbddtdic,gn
 MRI-ESM2-0,historical,Omon,fbddtdic,gn
-CESM2,historical,Omon,fgo2,gn
-ACCESS-ESM1-5,historical,Omon,fbddtdic,gn

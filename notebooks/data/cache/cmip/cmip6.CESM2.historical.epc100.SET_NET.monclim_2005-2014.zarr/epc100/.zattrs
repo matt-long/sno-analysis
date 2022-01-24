@@ -1,8 +1,0 @@
-{
-    "_ARRAY_DIMENSIONS": [
-        "region",
-        "month"
-    ],
-    "long_name": "POC export",
-    "units": "Tmol C month$^{-1}$"
-}

@@ -1,21 +1,11 @@
 epc100:
   cell_measures: 'area: areacello'
   cell_methods: 'area: mean where sea time: mean'
-  description: The phrase 'expressed_as' is used in the construction A_expressed_as_B,
-    where B is a chemical constituent of A. It means that the quantity indicated by
-    the standard name is calculated solely with respect to the B contained in A, neglecting
-    all other chemical constituents of A. In accordance with common usage in geophysical
-    disciplines, "flux" implies per unit area, called "flux density" in physics.   'Sinking'
-    is the gravitational settling of particulate matter suspended in a liquid. A sinking
-    flux is positive downwards and is calculated relative to the movement of the surrounding
-    fluid.
   long_name: Downward Flux of Particulate Organic Carbon
   units: mol m-2 s-1
 fbddtdic:
   cell_measures: 'area: areacello'
   cell_methods: 'area: mean where sea depth: sum where sea (top 100m only) time: mean'
-  description: vertical integral of net biological terms in time rate of change of
-    dissolved inorganic carbon
   long_name: Rate of Change of Dissolved Inorganic Carbon Due to Biological Activity
   units: mol m-2 s-1
 fgapo:
@@ -24,7 +14,6 @@ fgapo:
 fgco2:
   cell_measures: 'area: areacello'
   cell_methods: 'area: mean where sea time: mean'
-  description: Gas exchange flux of CO2 (positive into ocean)
   long_name: Surface Downward Flux of Total CO2
   units: kg m-2 s-1
 fgn2:
@@ -41,34 +30,20 @@ fgo2_thermal:
 hfds:
   cell_measures: 'area: areacello'
   cell_methods: 'area: mean where sea time: mean'
-  description: This is the net flux of heat entering the liquid water column through
-    its upper surface (excluding any "flux adjustment") .
   long_name: Downward Heat Flux at Sea Water Surface
   units: W m-2
 intpp:
   cell_measures: 'area: areacello'
   cell_methods: 'area: mean where sea depth: sum where sea time: mean'
-  description: Vertically integrated total primary (organic carbon) production by
-    phytoplankton.  This should equal the sum of intpdiat+intpphymisc, but those individual
-    components may be unavailable in some models.
   long_name: Primary Organic Carbon Production by All Types of Phytoplankton
   units: mol m-2 s-1
 sos:
   cell_measures: 'area: areacello'
   cell_methods: 'area: mean where sea time: mean'
-  description: 'Sea water salinity is the salt content of sea water, often on the
-    Practical Salinity Scale of 1978. However, the unqualified term ''salinity'' is
-    generic and does not necessarily imply any particular method of calculation. The
-    units of salinity are dimensionless and the units attribute should normally be
-    given as 1e-3 or 0.001 i.e. parts per thousand. '
   long_name: Sea Surface Salinity
   units: '0.001'
 tos:
   cell_measures: 'area: areacello'
   cell_methods: 'area: mean where sea time: mean'
-  description: This may differ from "surface temperature" in regions of sea ice or
-    floating ice shelves. For models using conservative temperature as the prognostic
-    field, they should report the top ocean layer as surface potential temperature,
-    which is the same as surface in situ temperature.
   long_name: Sea Surface Temperature
   units: degC

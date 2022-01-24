@@ -31,7 +31,12 @@
                 "region",
                 "month"
             ],
+            "cell_measures": "area: areacello",
+            "cell_methods": "area: mean where sea time: mean",
+            "comment": "Temperature of upper boundary of the liquid ocean, including temperatures below sea-ice and floating ice shelves.",
+            "history": "2020-02-12T07:18:19Z altered by CMOR: replaced missing value flag (-9.99e+33) and corresponding data with standard missing value (1e+20).",
             "long_name": "Thermal O$_2$ flux",
+            "standard_name": "sea_surface_temperature",
             "units": "Tmol O$_2$ month$^{-1}$"
         },
         "month/.zarray": {

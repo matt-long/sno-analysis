@@ -3,6 +3,12 @@
         "region",
         "month"
     ],
+    "cell_measures": "area: areacello",
+    "cell_methods": "area: mean where sea time: mean",
+    "comment": "Temperature of upper boundary of the liquid ocean, including temperatures below sea-ice and floating ice shelves.",
+    "history": "2019-08-15T19:40:05Z altered by CMOR: Converted type from 'd' to 'f'.",
     "long_name": "Surface temperature",
+    "original_name": "sst",
+    "standard_name": "sea_surface_temperature",
     "units": "$^\\circ$C"
 }

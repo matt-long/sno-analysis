@@ -31,7 +31,14 @@
                 "region",
                 "month"
             ],
+            "cell_measures": "area: areacello",
+            "cell_methods": "area: mean where sea time: mean",
+            "comment": "Gas exchange flux of O2 (positive into ocean)",
+            "history": "2019-07-04T10:26:08Z altered by CMOR: Converted units from 'mmol m-2 d-1' to 'mol m-2 s-1'. 2019-07-04T10:26:08Z altered by CMOR: Treated scalar dimension: 'depth'.",
             "long_name": "APO flux",
+            "original_name": "mo: (variable_name: O2FLUX)",
+            "original_units": "mmol m-2 d-1",
+            "standard_name": "surface_downward_mole_flux_of_molecular_oxygen",
             "units": "Tmol APO month$^{-1}$"
         },
         "month/.zarray": {

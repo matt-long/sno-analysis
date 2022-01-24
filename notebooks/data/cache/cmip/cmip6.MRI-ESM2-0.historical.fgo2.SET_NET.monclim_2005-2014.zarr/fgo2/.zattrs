@@ -3,6 +3,11 @@
         "region",
         "month"
     ],
+    "cell_measures": "area: areacello",
+    "cell_methods": "area: mean where sea time: mean",
+    "comment": "Gas exchange flux of O2 (positive into ocean)",
+    "history": "2019-12-21T04:26:30Z altered by CMOR: Treated scalar dimension: 'depth'. 2019-12-21T04:26:30Z altered by CMOR: replaced missing value flag (-9.99e+33) and corresponding data with standard missing value (1e+20).",
     "long_name": "O$_2$ flux",
+    "standard_name": "surface_downward_mole_flux_of_molecular_oxygen",
     "units": "Tmol O$_2$ month$^{-1}$"
 }

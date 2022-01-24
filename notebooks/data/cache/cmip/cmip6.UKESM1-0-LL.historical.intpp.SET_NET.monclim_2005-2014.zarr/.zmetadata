@@ -31,7 +31,14 @@
                 "region",
                 "month"
             ],
+            "cell_measures": "area: areacello",
+            "cell_methods": "area: mean where sea depth: sum where sea time: mean",
+            "comment": "Vertically integrated total primary (organic carbon) production by phytoplankton.  This should equal the sum of intpdiat+intpphymisc, but those individual components may be unavailable in some models.",
+            "history": "2019-07-04T10:29:59Z altered by CMOR: Converted units from 'mmol m-2 d-1' to 'mol m-2 s-1'. 2019-07-04T10:29:59Z altered by CMOR: Converted type from 'd' to 'f'.",
             "long_name": "NPP",
+            "original_name": "mo: ((variable_name: PRN) + (variable_name: PRD)) * ((C_TO_N_RATIO: 6.625): 6.625)",
+            "original_units": "mmol m-2 d-1",
+            "standard_name": "net_primary_mole_productivity_of_biomass_expressed_as_carbon_by_phytoplankton",
             "units": "Tmol C month$^{-1}$"
         },
         "month/.zarray": {

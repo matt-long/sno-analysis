@@ -3,6 +3,11 @@
         "region",
         "month"
     ],
+    "cell_measures": "area: areacello",
+    "cell_methods": "area: mean where sea depth: sum where sea time: mean",
+    "comment": "Vertically integrated total primary (organic carbon) production by phytoplankton.  This should equal the sum of intpdiat+intpphymisc, but those individual components may be unavailable in some models.",
+    "history": "2019-10-29T02:55:51Z altered by CMOR: replaced missing value flag (-9.99e+33) and corresponding data with standard missing value (1e+20).",
     "long_name": "NPP",
+    "standard_name": "net_primary_mole_productivity_of_biomass_expressed_as_carbon_by_phytoplankton",
     "units": "Tmol C month$^{-1}$"
 }

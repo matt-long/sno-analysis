@@ -3,6 +3,13 @@
         "region",
         "month"
     ],
+    "cell_measures": "area: areacello",
+    "cell_methods": "area: mean where sea time: mean",
+    "comment": "Gas exchange flux of CO2 (positive into ocean)",
+    "history": "2019-11-15T14:52:41Z altered by CMOR: Converted units from 'mg m-2 d-1' to 'kg m-2 s-1'. 2019-11-15T14:52:41Z altered by CMOR: Treated scalar dimension: 'depth'.",
     "long_name": "CO$_2$ flux",
+    "original_name": "mo: (variable_name: CO2FLUX) * (ATOMIC_MASS_OF_C: 12.)",
+    "original_units": "mg m-2 d-1",
+    "standard_name": "surface_downward_mass_flux_of_carbon_dioxide_expressed_as_carbon",
     "units": "Tmol CO$_2$ month$^{-1}$"
 }

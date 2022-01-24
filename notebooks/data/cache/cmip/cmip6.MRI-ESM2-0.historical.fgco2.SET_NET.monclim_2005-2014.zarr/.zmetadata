@@ -31,7 +31,12 @@
                 "region",
                 "month"
             ],
+            "cell_measures": "area: areacello",
+            "cell_methods": "area: mean where sea time: mean",
+            "comment": "Gas exchange flux of CO2 (positive into ocean)",
+            "history": "2019-12-21T04:19:05Z altered by CMOR: Treated scalar dimension: 'depth'. 2019-12-21T04:19:05Z altered by CMOR: replaced missing value flag (-9.99e+33) and corresponding data with standard missing value (1e+20).",
             "long_name": "CO$_2$ flux",
+            "standard_name": "surface_downward_mass_flux_of_carbon_dioxide_expressed_as_carbon",
             "units": "Tmol CO$_2$ month$^{-1}$"
         },
         "month/.zarray": {

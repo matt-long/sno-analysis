@@ -3,6 +3,13 @@
         "region",
         "month"
     ],
+    "cell_measures": "area: areacello",
+    "cell_methods": "area: mean where sea time: mean",
+    "comment": "Temperature of upper boundary of the liquid ocean, including temperatures below sea-ice and floating ice shelves.",
+    "history": "2019-08-15T19:40:05Z altered by CMOR: Converted type from 'd' to 'f'.",
     "long_name": "N$_2$ flux",
+    "note": "fluxes computed using F = c * (-dC/dT) * Q/Cp; c = 0.7692",
+    "original_name": "sst",
+    "standard_name": "sea_surface_temperature",
     "units": "Tmol N$_2$ month$^{-1}$"
 }

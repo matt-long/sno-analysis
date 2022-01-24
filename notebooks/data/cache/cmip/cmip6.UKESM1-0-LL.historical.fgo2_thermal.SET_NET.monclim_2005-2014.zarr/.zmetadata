@@ -31,7 +31,12 @@
                 "region",
                 "month"
             ],
+            "cell_measures": "area: areacello",
+            "cell_methods": "area: mean where sea time: mean",
+            "comment": "Temperature of upper boundary of the liquid ocean, including temperatures below sea-ice and floating ice shelves.",
             "long_name": "Thermal O$_2$ flux",
+            "original_name": "mo: (variable_name: tos)",
+            "standard_name": "sea_surface_temperature",
             "units": "Tmol O$_2$ month$^{-1}$"
         },
         "month/.zarray": {

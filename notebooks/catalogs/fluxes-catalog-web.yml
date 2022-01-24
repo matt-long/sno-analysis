@@ -20,6 +20,19 @@ sources:
           same_names: true
           cache_storage: "{{ env(INTAKE_LOCAL_CACHE_DIR) }}"
   
+  fgco2_MPI_SOM_FFN_v2021:
+    driver: netcdf
+    description: "An observation-based global monthly gridded sea surface pCO2 product from 1982 onward and its monthly climatology. Citation: Landschützer, P., Gruber, N., Bakker, D. C. E.: Decadal variations and trends of the global ocean carbon sink, Global Biogeochemical Cycles, 30, doi:10.1002/2015GB005359, 2016"
+    args:
+      urlpath: simplecache::https://www.ncei.noaa.gov/data/oceans/ncei/ocads/data/0160558/MPI_SOM-FFN_v2021/MPI-SOM_FFN_v2021_NCEI_OCADS.nc
+      xarray_kwargs:
+        decode_times: true
+        drop_variables: date
+      chunks: {}
+      storage_options:
+        simplecache:
+          same_names: true
+          cache_storage: "{{ env(INTAKE_LOCAL_CACHE_DIR) }}"
   
   fgapo_CarbonScope_apo99_v2020:
     driver: netcdf

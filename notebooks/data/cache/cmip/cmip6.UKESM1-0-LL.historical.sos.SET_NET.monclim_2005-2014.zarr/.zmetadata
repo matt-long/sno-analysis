@@ -81,7 +81,14 @@
                 "region",
                 "month"
             ],
+            "cell_measures": "area: areacello",
+            "cell_methods": "area: mean where sea time: mean",
+            "comment": "Sea water salinity is the salt content of sea water, often on the Practical Salinity Scale of 1978. However, the unqualified term 'salinity' is generic and does not necessarily imply any particular method of calculation. The units of salinity are dimensionless and the units attribute should normally be given as 1e-3 or 0.001 i.e. parts per thousand.",
+            "history": "2019-07-04T10:38:41Z altered by CMOR: Converted units from '1e-3' to '0.001'.",
             "long_name": "Surface salinity",
+            "original_name": "mo: (variable_name: sos)",
+            "original_units": "1e-3",
+            "standard_name": "sea_surface_salinity",
             "units": "PSU"
         }
     },

@@ -1,8 +1,0 @@
-{
-    "_ARRAY_DIMENSIONS": [
-        "region",
-        "month"
-    ],
-    "long_name": "Bio DIC change",
-    "units": "Tmol C month$^{-1}$"
-}
