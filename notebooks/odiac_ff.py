@@ -15,6 +15,7 @@ import util
 
 grid_1x1 = util.generate_latlon_grid(nx=360, ny=180, lon0=-180.)
 
+mwC = 12.01
 
 def _open_dataset(path, add_time=False):
     try:
@@ -31,7 +32,7 @@ def _open_dataset(path, add_time=False):
         time.encoding['dtype'] = np.float64    
         time.encoding['_FillValue'] = None        
         
-        dso['fgco2'] = ds.emission.sum('n_hour').expand_dims('time') / 12. / 86400.
+        dso['fgco2'] = ds.emission.sum('n_hour').expand_dims('time') / mwC / 86400. / 24
         dso.fgco2.attrs = {k: v for k, v in ds.emission.attrs.items() if k != 'unit'}
         dso.fgco2.attrs['long_name'] = 'Fossil fuel flux'
         dso.fgco2.attrs['units'] = 'mol/m^2/s'                    
