@@ -45,7 +45,21 @@ sources:
       storage_options:
         simplecache:
           same_names: true
-          cache_storage: "{{ env(INTAKE_LOCAL_CACHE_DIR) }}/test"
+          cache_storage: "{{ env(INTAKE_LOCAL_CACHE_DIR) }}"
+          
+          
+  fgapo_CarbonScope_apo99X_v2021:
+    driver: netcdf
+    description: "Using an atmospheric inversion technique similar to the Jena CO2 inversion, sea-air oxygen exchanges have been estimated from atmospheric O2/N2 measurements (Rödenbeck et al., 2008). In order to eliminate the influence of land processes on atmospheric oxygen abundance, the tracer Atmospheric Potential Oxygen (APO) has been used (Stephens et al., 1998). DOI: 10.17871/CarboScope-apo99X_v2021"
+    args:
+      urlpath: simplecache::https://www.bgc-jena.mpg.de/CarboScope/apo/INVERSION/OUTPUT/apo99X_v2021_daily.nc
+      xarray_kwargs:
+        decode_times: false
+      chunks: {}
+      storage_options:
+        simplecache:
+          same_names: true
+          cache_storage: "{{ env(INTAKE_LOCAL_CACHE_DIR) }}"          
           
   fgco2_fff_odiac_2018:
     # To use: ds = cat[f'fgco2_fff_odiac_{version}'](year=value.year, month=value.month, day=value.day).to_dask()

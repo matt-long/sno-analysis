@@ -32,12 +32,12 @@ def _open_dataset(path, add_time=False):
         time.encoding['dtype'] = np.float64    
         time.encoding['_FillValue'] = None        
         
-        dso['fgco2'] = ds.emission.sum('n_hour').expand_dims('time') / mwC / 86400. / 24
-        dso.fgco2.attrs = {k: v for k, v in ds.emission.attrs.items() if k != 'unit'}
-        dso.fgco2.attrs['long_name'] = 'Fossil fuel flux'
-        dso.fgco2.attrs['units'] = 'mol/m^2/s'                    
-        dso.fgco2.attrs['cell_methods'] = 'time: sum'                            
-        dso.fgco2.encoding['_FillValue'] = default_fillvals['f8']
+        dso['SFCO2_FF'] = ds.emission.sum('n_hour').expand_dims('time') / mwC / 86400. / 24
+        dso.SFCO2_FF.attrs = {k: v for k, v in ds.emission.attrs.items() if k != 'unit'}
+        dso.SFCO2_FF.attrs['long_name'] = 'Fossil fuel flux'
+        dso.SFCO2_FF.attrs['units'] = 'mol/m^2/s'                    
+        dso.SFCO2_FF.attrs['cell_methods'] = 'time: sum'                            
+        dso.SFCO2_FF.encoding['_FillValue'] = default_fillvals['f8']
         
         t0 = cftime.date2num(cftime.datetime(year, month, day, 0), units_time)
         time_bounds_data = cftime.num2date(np.array([[t0, t0+1]]), units_time)        
@@ -70,14 +70,14 @@ def _open_dataset(path, add_time=False):
     return dso
 
 
-def retrieve_datasets(date, version='OCO2-MIP'):
-    assert version in ['OCO2-MIP']
+def retrieve_datasets(date, version='v2020.1'):
+    assert version in ['v2020.1']
 
     year, month = date.year, date.month
     
     _, nday = monthrange(year, month)
     
-    cache_storage = f"/glade/scratch/{os.environ['USER']}/ODIAC_SFCO2_FFF_{version}"
+    cache_storage = f"/glade/scratch/{os.environ['USER']}/OCO2-MIP-SFCO2_FF_{version}"
     os.makedirs(cache_storage, exist_ok=True)
 
 
@@ -89,7 +89,7 @@ def retrieve_datasets(date, version='OCO2-MIP'):
     
     if not all([os.path.exists(p) for p in assets_nc]):
         cwd = os.getcwd()
-        if version == '2021':
+        if version == 'v2020.1':
             url = f'https://zenodo.org/record/4776925/files/{asset_tar}'
 
         os.chdir(cache_storage)

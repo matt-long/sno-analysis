@@ -3,16 +3,9 @@ plugins:
   source:
   - module: intake_xarray
 sources:
-  fgapo.carboscope.apo99_v2020:
+  SFCO2_OCN.MPI-SOM-FFN:
     args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgapo_ocn.CarboScope.apo99_v2020.nc
-      xarray_kwargs:
-        decode_times: false
-    description: APO fluxes from CarboScope inversion apo99_v2020
-    driver: netcdf
-  fgco2.MPI-SOM-FFN:
-    args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgco2.MPI-SOM-FFN.v2021.199501-202012.nc
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/SFCO2_OCN.MPI-SOM-FFN.v2021.198401-202012.nc
       xarray_kwargs:
         decode_times: false
     description: "An observation-based global monthly gridded sea surface pCO2 product\
@@ -21,48 +14,16 @@ sources:
       \ ocean carbon sink, Global Biogeochemical Cycles, 30, doi:10.1002/2015GB005359,\
       \ 2016"
     driver: netcdf
-  fgco2.ODIAC-FF.OCO2-MIP:
+  SFN2_OCN.era5_shf:
     args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgco2.ODIAC-FF.OCO2-MIP.20000101-20201231.nc
-      xarray_kwargs:
-        decode_times: false
-    description: daily integral of ODIAC Fossil Fuel CO2 Emissions for the OCO2 Model
-      Intercomparison Project (MIP)
-    driver: netcdf
-  fgco2.cesm_fosi_smyle:
-    args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgco2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20201231.nc
-      xarray_kwargs:
-        decode_times: false
-    description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
-      at daily resolution
-    driver: netcdf
-  fgn2.cesm_fosi_smyle:
-    args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgn2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20201231.nc
-      xarray_kwargs:
-        decode_times: false
-    description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
-      at monthly resolution
-    driver: netcdf
-  fgn2.era5_shf:
-    args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgn2.era5-shf.shft_0d.scale_0.77.1990-2020.nc
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/SFN2_OCN.era5-shf.shft_0d.scale_0.77.1984-2020.nc
       xarray_kwargs:
         decode_times: false
     description: N2 flux computed from ERA5 heat flux
     driver: netcdf
-  fgo2.cesm_fosi_smyle:
+  SFO2_OCN.gk2001_Resplandy:
     args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgo2.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19900101-20201231.nc
-      xarray_kwargs:
-        decode_times: false
-    description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
-      at daily resolution
-    driver: netcdf
-  fgo2.gk2001_Resplandy:
-    args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/fgo2.garcia-keeling.monclim.shft_0d.scale_0.82.resplandy_ann.nc
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/SFO2_OCN.GK2001.monclim.shft_0d.scale_0.82.R16_ann.nc
       xarray_kwargs:
         decode_times: false
     description: GK2001 seasional fluxes with Resplandy annual mean; time axis shifted

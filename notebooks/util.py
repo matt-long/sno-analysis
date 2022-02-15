@@ -695,7 +695,7 @@ def lat_weights_regular_grid(lat):
     Weights are computed as sin(lat+dlat/2)-sin(lat-dlat/2) and sum to 2.0.
     """   
     dlat = np.abs(np.diff(lat))
-    np.testing.assert_almost_equal(dlat, dlat[0])
+    np.testing.assert_almost_equal(dlat, dlat[0], decimal=5)
     w = np.abs(np.sin(np.radians(lat + dlat[0] / 2.)) - np.sin(np.radians(lat - dlat[0] / 2.)))
 
     if np.abs(lat[0]) > 89.9999: 
@@ -886,9 +886,12 @@ def to_netcdf_clean(dset, path, format='NETCDF3_64BIT', **kwargs):
     
 class curate_flux_products(object):    
     
-    def __init__(self):
+    def __init__(self, clobber=False):
         
         self.catalog_file = "catalogs/flux_products-catalog-local.yml"
+        if os.path.exists(self.catalog_file) and clobber:
+            os.remove(self.catalog_file)
+        
         if os.path.exists(self.catalog_file):
             with open(self.catalog_file, "r") as fid:
                 self.catalog = yaml.safe_load(fid)               
