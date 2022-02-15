@@ -10,6 +10,14 @@ sources:
         decode_times: false
     description: APO fluxes from CarboScope inversion apo99X_v2021
     driver: netcdf
+  SFCO2_FF.GCP-GridFED.v2021.3:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/SFCO2_FF.GCP-GridFED.v2021.3.19840101-20201231.nc
+      xarray_kwargs:
+        decode_times: false
+    description: Gridded fossil CO2 emissions consistent with national inventories
+      1959-2020
+    driver: netcdf
   SFCO2_OCN.MPI-SOM-FFN:
     args:
       urlpath: /glade/work/mclong/sno-analysis/flux-products/SFCO2_OCN.MPI-SOM-FFN.v2021.198401-202012.nc
@@ -44,6 +52,14 @@ sources:
         decode_times: false
     description: N2 flux computed from ERA5 heat flux
     driver: netcdf
+  SFO2_FF.GCP-GridFED.v2021.3:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/SFO2_FF.GCP-GridFED.v2021.3.19840101-20201231.nc
+      xarray_kwargs:
+        decode_times: false
+    description: Gridded fossil O2 combustion consistent with national inventories
+      1959-2020
+    driver: netcdf
   SFO2_OCN.cesm_fosi_smyle:
     args:
       urlpath: /glade/work/mclong/sno-analysis/flux-products/SFO2_OCN.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19840101-20201231.nc
@@ -59,12 +75,4 @@ sources:
         decode_times: false
     description: GK2001 seasional fluxes with Resplandy annual mean; time axis shifted
       by 0.0d, fluxes scaled by 0.82
-    driver: netcdf
-  fgco2.GCP-GridFED.v2021.3:
-    args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/SFO2_FF.GCP-GridFED.v2021.3.19840101-20201231.nc
-      xarray_kwargs:
-        decode_times: false
-    description: Gridded fossil CO2 emissions and related O2 combustion consistent
-      with national inventories 1959-2020
     driver: netcdf
