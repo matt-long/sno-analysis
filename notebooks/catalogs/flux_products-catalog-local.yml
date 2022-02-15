@@ -21,12 +21,36 @@ sources:
       \ ocean carbon sink, Global Biogeochemical Cycles, 30, doi:10.1002/2015GB005359,\
       \ 2016"
     driver: netcdf
+  SFCO2_OCN.cesm_fosi_smyle:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/SFCO2_OCN.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19840101-20201231.nc
+      xarray_kwargs:
+        decode_times: false
+    description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
+      at daily resolution
+    driver: netcdf
+  SFN2_OCN.cesm_fosi_smyle:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/SFN2_OCN.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19840101-20201231.nc
+      xarray_kwargs:
+        decode_times: false
+    description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
+      at monthly resolution
+    driver: netcdf
   SFN2_OCN.era5_shf:
     args:
       urlpath: /glade/work/mclong/sno-analysis/flux-products/SFN2_OCN.era5-shf.shft_0d.scale_0.77.1984-2020.nc
       xarray_kwargs:
         decode_times: false
     description: N2 flux computed from ERA5 heat flux
+    driver: netcdf
+  SFO2_OCN.cesm_fosi_smyle:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/SFO2_OCN.g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005.19840101-20201231.nc
+      xarray_kwargs:
+        decode_times: false
+    description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
+      at daily resolution
     driver: netcdf
   SFO2_OCN.gk2001_Resplandy:
     args:
