@@ -77,7 +77,7 @@ def retrieve_datasets(date, version='v2020.1'):
     
     _, nday = monthrange(year, month)
     
-    cache_storage = f"/glade/scratch/{os.environ['USER']}/OCO2-MIP-SFCO2_FF_{version}"
+    cache_storage = f"/glade/scratch/{os.environ['USER']}/OCO2-MIP-SFCO2_FF-{version}"
     os.makedirs(cache_storage, exist_ok=True)
 
 
@@ -86,7 +86,7 @@ def retrieve_datasets(date, version='v2020.1'):
         f'{cache_storage}/{year:04d}/{month:02d}/fossil_fuel_1x1_{year:04d}{month:02d}{day:02d}.nc'
         for day in range(1, nday+1)
     ]
-    
+
     if not all([os.path.exists(p) for p in assets_nc]):
         cwd = os.getcwd()
         if version == 'v2020.1':

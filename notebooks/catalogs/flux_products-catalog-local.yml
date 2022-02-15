@@ -18,6 +18,14 @@ sources:
     description: Gridded fossil CO2 emissions consistent with national inventories
       1959-2020
     driver: netcdf
+  SFCO2_FF.OCO2-MIP.v2020.1:
+    args:
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/SFCO2_FF.OCO2-MIP-FF.v2020.1.20000101-20201231.nc
+      xarray_kwargs:
+        decode_times: false
+    description: "daily integral of Fossil Fuel CO\u2082 Emissions for the OCO2 Model\
+      \ Intercomparison Project (MIP)"
+    driver: netcdf
   SFCO2_OCN.MPI-SOM-FFN:
     args:
       urlpath: /glade/work/mclong/sno-analysis/flux-products/SFCO2_OCN.MPI-SOM-FFN.v2021.198401-202012.nc
