@@ -27,6 +27,13 @@ def _get_inversion_region_flux_table_source(product):
     
 def open_inversion_annual_flux(product, gk_grid=False):
     """return inversion flux product"""
+    if product == 'R2016':
+        product = 'Resplandy'
+    elif product == 'G2001':
+        product = 'Gruber'
+    
+    assert product in ['Resplandy', 'Gruber']
+    
     source_info = _get_inversion_region_flux_table_source(product)
     region_flux = _get_inversion_region_flux_table(product)
 

@@ -76,11 +76,12 @@ sources:
     description: CESM simulated flux from g.e22.GOMIPECOIAF_JRA-1p4-2018.TL319_g17.SMYLE.005
       at daily resolution
     driver: netcdf
-  SFO2_OCN.gk2001_Resplandy:
+  SFO2_OCN.gk2001_R2016:
     args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/SFO2_OCN.GK2001.monclim.shft_0d.scale_0.82.R16_ann.nc
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/SFO2_OCN.GK2001.monclim.shft_0d.scale_0.82.R2016_ann.nc
       xarray_kwargs:
         decode_times: false
-    description: GK2001 seasional fluxes with Resplandy annual mean; time axis shifted
+    description: GK2001 seasional fluxes with R2016 annual mean; time axis shifted
       by 0.0d, fluxes scaled by 0.82
     driver: netcdf
+
