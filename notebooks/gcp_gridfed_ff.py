@@ -21,7 +21,7 @@ dst_grid = regrid_tools.grid("latlon", **config.config_dict["flux-dst-grid-kwarg
 regrid_obj = regrid_tools.regridder(src_grid, dst_grid, method="conserve", clobber=False)
 
 mwCO2 = 44.0 # g-CO2 / mol-CO2
-mwO2 = 16.0 # g-O2 / mol-O2
+mwO2 = 32.0 # g-O2 / mol-O2
 
 kgCO2mon_to_molCO2m2s = 1e3 / mwCO2 * 12 / 365 / 86400
 kgO2mon_to_molO2m2s = 1e3 / mwO2 * 12 / 365 / 86400
