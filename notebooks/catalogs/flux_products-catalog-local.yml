@@ -3,9 +3,9 @@ plugins:
   source:
   - module: intake_xarray
 sources:
-  SFAPO.carboscope.apo99X_v2021:
+  SFAPO_OCN.carboscope.apo99X_v2021:
     args:
-      urlpath: /glade/work/mclong/sno-analysis/flux-products/SFAPO.CarboScope.apo99X_v2021.nc
+      urlpath: /glade/work/mclong/sno-analysis/flux-products/SFAPO_OCN.CarboScope.apo99X_v2021.nc
       xarray_kwargs:
         decode_times: false
     description: APO fluxes from CarboScope inversion apo99X_v2021
@@ -84,4 +84,3 @@ sources:
     description: GK2001 seasional fluxes with R2016 annual mean; time axis shifted
       by 0.0d, fluxes scaled by 0.82
     driver: netcdf
-
