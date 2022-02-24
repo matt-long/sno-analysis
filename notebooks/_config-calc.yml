@@ -1,4 +1,4 @@
-flux-product-dir: "/glade/work/{{env['USER']}}/sno-analysis/flux-products"
+flux-product-dir: "/glade/work/{{env['USER']}}/sno-analysis/flux-products-staging"
 project-tmpdir: "/glade/work/{{env['USER']}}/sno-analysis"
 flux-dst-grid-kwargs:
   nx: 360
