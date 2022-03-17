@@ -1,4 +1,6 @@
-time,SFAPO_OCN.apo_jena [Pmol/yr],SFCO2_OCN.co2_cesm [Pmol/yr],SFCO2_FF.co2_gridfed [Pmol/yr],SFCO2_FF.co2_oco2mip [Pmol/yr],SFCO2_OCN.co2_somffn [Pmol/yr],SFN2_OCN.n2_cesm [Pmol/yr],SFN2_OCN.n2_era [Pmol/yr],SFO2_OCN.o2_cesm [Pmol/yr],SFO2_OCN.o2_gk01r16 [Pmol/yr],SFO2_FF.o2_gridfed [Pmol/yr]
+# Globally-integrated fluxes
+# Units: Pmol/yr
+time,SFAPO_OCN.apo_jena,SFCO2_OCN.co2_cesm,SFCO2_FF.co2_gridfed,SFCO2_FF.co2_oco2mip,SFCO2_OCN.co2_somffn,SFN2_OCN.n2_cesm,SFN2_OCN.n2_era,SFO2_OCN.o2_cesm,SFO2_OCN.o2_gk01r16,SFO2_FF.o2_gridfed
 1986-01-01 12:00:00,0.0,-0.21893361,0.52872,0.0,-0.13040504,0.033259265,0.47658706,0.1449921,0.65372443,-0.7336699
 1986-01-02 12:00:00,0.0,-0.21377376,0.52939284,0.0,-0.1300061,0.029606853,0.4732203,0.23117556,0.6532847,-0.7345359
 1986-01-03 12:00:00,0.0,-0.2051813,0.5300657,0.0,-0.12960714,0.025954477,0.46985322,0.3820419,0.6528448,-0.73540187
