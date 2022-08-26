@@ -725,6 +725,20 @@ def compute_grid_area(ds, check_total=True):
         
     return xr.DataArray(area, dims=(lat_name, lon_name), attrs={'units': 'm^2', 'long_name': 'area'})  
 
+def compute_apo(co2, o2, n2):
+    """
+    compute APO concentration anomaly from O2, CO2, and N2
+
+    using Stephens et al., GBC (1998) equation 5:
+
+    Delta_APO = Delta_O2 / X_O2 - Delta_N2 / X_N2 + 1.1 * DELTA_CO2 / X_O2
+
+    """ 
+    
+    return o2 / X_O2 - n2 / X_N2 + 1.1 * co2 / X_O2
+#    da.attrs["units"] = "per meg"
+#    da.attrs["long_name"] = "APO"
+#    return da
 
 def yyyymmdd(year, month, day):
     return year * 10000 + month * 100 + day
@@ -938,4 +952,5 @@ class curate_flux_products(object):
         return self.catalog.__repr__()
     
     
+
     
