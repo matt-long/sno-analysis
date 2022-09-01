@@ -54,3 +54,18 @@ http://www.bgc-jena.mpg.de/~christian.roedenbeck/CarboScope/INVERSION/OUTPUT/OUT
 http://www.bgc-jena.mpg.de/~christian.roedenbeck/CarboScope/INVERSION/OUTPUT/OUTPUT14.004+tm3_ncep.1986-2020_fg.co2.vGV7.sGV7.FwdFile_BrittStephensAPO/PRI_o2cesm_output1.vGV7.sGV7.tar.gz
 
 http://www.bgc-jena.mpg.de/~christian.roedenbeck/CarboScope/INVERSION/OUTPUT/OUTPUT14.004+tm3_ncep.1986-2020_fg.co2.vGV7.sGV7.FwdFile_BrittStephensAPO/PRI_o2gk01r16_output1.vGV7.sGV7.tar.gz
+
+## CT_TM5
+
+On Mon, Jul 18, 2022 at 4:19 PM Andy Jacobson <andy.jacobson@noaa.gov> wrote:
+Guys,
+
+My 137-level APO run 1989-2021 finished. Can I globus you the data? And which data do you want anyway?
+
+-Andy
+
+--
+Andy Jacobson
+andy.jacobson@noaa.gov
+
+## CAMS_LMDZ
