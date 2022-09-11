@@ -137,3 +137,31 @@ Please let me know if anything looks suspicious
 
 Best regards
 Shamil
+
+
+## NICAM-TM
+
+On Tue, Sep 6, 2022 at 7:38 AM Yosuke NIWA <niwa.yosuke@nies.go.jp> wrote:
+Dear Britt,
+
+Sorry for my slow progress, but at last, I have prepared the NICAM-TM data on
+https://nies.box.com/s/b49snadb9sz3vydxr8ewhzy8hpc40hrm
+
+where you can download the primary aircraft/station data as well as all obspack data.
+
+In a few days, I will prepare the other data (3D mole fractions, fixed/shipboard data).
+
+Furthermore, if time allows, I will also perform another simulation with a higher model resolution.
+
+I hope my data could help your analysis.
+Kind regards,
+Yosuke
+
+On Wed, Sep 7, 2022 at 1:48 AM Yosuke NIWA <niwa.yosuke@nies.go.jp> wrote:
+I have added fixed/shipboard data on the same server (Box).
+For 3D model data, I can provide them, but using Box would be time-consuming (for both upload and download).
+If you need the 3D data and you can prepare a ftp server where I can upload them, please let me know.
+I also prepare a ftp server at NIES, but it requires a couple of days to set-up.
+
+Kind regards,
+Yosuke
